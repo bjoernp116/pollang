@@ -6,6 +6,8 @@ use anyhow::anyhow;
 pub enum Token {
     Left_Paren,
     Right_Paren,
+    Left_Brace,
+    Right_Brace
 }
 
 
@@ -27,6 +29,8 @@ impl Display for Token {
         let str: &str = match self.clone() {
             Left_Paren => "LEFT_PAREN",
             Right_Paren => "RIGHT_PAREN",
+            Left_Brace => "LEFT_BRACE",
+            Right_Brace => "RIGHT_BRACE",
         };
         write!(f, "{}", str)?;
         Ok(())
@@ -48,6 +52,8 @@ impl TryFrom<char> for Token {
         match value {
             '(' => Ok(Token::Left_Paren),
             ')' => Ok(Token::Right_Paren),
+            '{' => Ok(Token::Left_Brace),
+            '}' => Ok(Token::Right_Brace),
             _ => Err(anyhow!("symbol not found: {}", value))
         }
     }
@@ -58,6 +64,8 @@ impl From<Token> for char {
         match value {
             Token::Left_Paren => '(',
             Token::Right_Paren => ')',
+            Token::Left_Brace => '{',
+            Token::Right_Brace => '}',
         }
     }
 }
