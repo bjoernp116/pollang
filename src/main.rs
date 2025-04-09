@@ -1,13 +1,14 @@
 use std::env;
 use std::fs;
 use std::io::{self, Write};
+
+use anyhow::anyhow;
 mod scanner;
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        writeln!(io::stderr(), "Usage: {} tokenize <filename>", args[0]).unwrap();
-        return;
+        return Err(anyhow!("Usage: {} tokenize <filename>", args[0]));
     }
 
     let command = &args[1];
@@ -24,14 +25,17 @@ fn main() {
             });
 
             if !file_contents.is_empty() {
-                panic!("Scanner not implemented");
+                let tokens = scanner::scan(file_contents)?;
+                for token in tokens {
+                    println!("{:?}", token);
+                }
             } else {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             }
         }
         _ => {
-            writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
-            return;
+            return Err(anyhow!("Unknown command: {}", command));
         }
     }
+    Ok(())
 }
