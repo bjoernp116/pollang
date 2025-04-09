@@ -3,11 +3,22 @@ use std::fmt::{Debug, Display};
 use anyhow::anyhow;
 
 #[derive(Clone)]
-pub enum Token {
+pub enum TokenType {
     Left_Paren,
     Right_Paren,
     Left_Brace,
-    Right_Brace
+    Right_Brace,
+    Star,
+    Dot,
+    Comma,
+    Plus,
+    Minus,
+    Slash,
+    SemiColon,
+}
+pub struct Token {
+    token_type: TokenType,
+    raw: char
 }
 
 
@@ -25,12 +36,19 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Token::*;
-        let str: &str = match self.clone() {
+        use TokenType::*;
+        let str: &str = match self.token_type.clone() {
             Left_Paren => "LEFT_PAREN",
             Right_Paren => "RIGHT_PAREN",
             Left_Brace => "LEFT_BRACE",
             Right_Brace => "RIGHT_BRACE",
+            Star => "STAR",
+            Dot => "DOT",
+            Comma => "COMMA",
+            Plus => "PLUS",
+            Minus => "MINUS",
+            Slash => "SLASH",
+            SemiColon => "SEMICOLON",
         };
         write!(f, "{}", str)?;
         Ok(())
@@ -40,8 +58,7 @@ impl Display for Token {
 impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = format!("{}", self);
-        let raw: char = self.clone().into();
-        write!(f, "{} {} null", name, raw)?;
+        write!(f, "{} {} null", name, self.raw)?;
         Ok(())
     }
 }
@@ -49,23 +66,24 @@ impl Debug for Token {
 impl TryFrom<char> for Token {
     type Error = anyhow::Error;
     fn try_from(value: char) -> Result<Self, Self::Error> {
-        match value {
-            '(' => Ok(Token::Left_Paren),
-            ')' => Ok(Token::Right_Paren),
-            '{' => Ok(Token::Left_Brace),
-            '}' => Ok(Token::Right_Brace),
-            _ => Err(anyhow!("symbol not found: {}", value))
-        }
+        use TokenType::*;
+        let token_type = match value {
+            '(' => Left_Paren,
+            ')' => Right_Paren,
+            '{' => Left_Brace,
+            '}' => Right_Brace,
+            '*' => Star,
+            '.' => Dot,
+            ',' => Comma,
+            '+' => Plus,
+            '-' => Minus,
+            '/' => Slash,
+            ';' => SemiColon,
+            _ => return Err(anyhow!("Charachter: {:?}, not yet implemented!", value))
+        };
+        Ok(Token {
+            token_type, raw: value
+        })
     }
 }
 
-impl From<Token> for char {
-    fn from(value: Token) -> Self {
-        match value {
-            Token::Left_Paren => '(',
-            Token::Right_Paren => ')',
-            Token::Left_Brace => '{',
-            Token::Right_Brace => '}',
-        }
-    }
-}
