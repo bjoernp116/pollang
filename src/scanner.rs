@@ -18,17 +18,28 @@ pub enum TokenType {
 }
 pub struct Token {
     token_type: TokenType,
-    raw: char
+    raw: char,
+    line: usize
 }
 
 
 pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
     let mut out = Vec::new();
+    let mut line = 0usize;
     for c in str.chars() {
-        match Token::try_from(c) {
-            Ok(token) => out.push(token),
-            Err(err) => {} // println!("{}", err)
-        };
+        match c {
+            '\n' => line += 1,
+            ' ' => {},
+            _ => {
+                let token_type = TokenType::try_from(c)?;
+                let token = Token {
+                    token_type,
+                    raw: c,
+                    line
+                };
+                out.push(token)
+            }
+        }
     }
     Ok(out)
 }
@@ -63,7 +74,7 @@ impl Debug for Token {
     }
 }
 
-impl TryFrom<char> for Token {
+impl TryFrom<char> for TokenType {
     type Error = anyhow::Error;
     fn try_from(value: char) -> Result<Self, Self::Error> {
         use TokenType::*;
@@ -81,9 +92,7 @@ impl TryFrom<char> for Token {
             ';' => SemiColon,
             _ => return Err(anyhow!("Charachter: {:?}, not yet implemented!", value))
         };
-        Ok(Token {
-            token_type, raw: value
-        })
+        Ok(token_type)
     }
 }
 
