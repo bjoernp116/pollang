@@ -96,7 +96,7 @@ impl TryFrom<char> for TokenType {
             '-' => Minus,
             '/' => Slash,
             ';' => SemiColon,
-            _ => return Err(anyhow!("Unexpected charachter: {:?}", value))
+            _ => return Err(anyhow!("Unexpected character: {}", value))
         };
         Ok(token_type)
     }
