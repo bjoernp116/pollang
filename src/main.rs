@@ -29,6 +29,7 @@ fn main() -> anyhow::Result<()> {
                 for token in tokens {
                     println!("{:?}", token);
                 }
+                println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             } else {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             }
