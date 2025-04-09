@@ -25,13 +25,19 @@ pub struct Token {
 
 pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
     let mut out = Vec::new();
-    let mut line = 0usize;
+    let mut line = 1usize;
     for c in str.chars() {
         match c {
             '\n' => line += 1,
             ' ' => {},
             _ => {
-                let token_type = TokenType::try_from(c)?;
+                let token_type = match TokenType::try_from(c) {
+                    Ok(x) => x,
+                    Err(err) => {
+                        println!("[line {}] Error: {}", line, err);
+                        continue;
+                    },
+                };
                 let token = Token {
                     token_type,
                     raw: c,
@@ -90,7 +96,7 @@ impl TryFrom<char> for TokenType {
             '-' => Minus,
             '/' => Slash,
             ';' => SemiColon,
-            _ => return Err(anyhow!("Charachter: {:?}, not yet implemented!", value))
+            _ => return Err(anyhow!("Unexpected charachter: {:?}", value))
         };
         Ok(token_type)
     }
