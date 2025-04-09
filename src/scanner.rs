@@ -35,7 +35,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                     Ok(x) => x,
                     Err(err) => {
                         println!("[line {}] Error: {}", line, err);
-                        continue;
+                        std::process::exit(65);
                     },
                 };
                 let token = Token {
