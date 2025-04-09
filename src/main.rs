@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 use std::io::{self, Write};
+mod scanner;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
