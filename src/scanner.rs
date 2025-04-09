@@ -25,8 +25,8 @@ impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Token::*;
         let str: &str = match self.clone() {
-            Left_Paren => "LEFT PAREN",
-            Right_Paren => "RIGHT PAREN",
+            Left_Paren => "LEFT_PAREN",
+            Right_Paren => "RIGHT_PAREN",
         };
         write!(f, "{}", str)?;
         Ok(())
