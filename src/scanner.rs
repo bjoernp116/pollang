@@ -12,12 +12,10 @@ pub enum Token {
 pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
     let mut out = Vec::new();
     for c in str.chars() {
-        let token: Token = match c {
-            '(' => Token::Left_Paren,
-            ')' => Token::Right_Paren,
-            _ => return Err(anyhow!("Unknown symbol: {}", c))
+        match Token::try_from(c) {
+            Ok(token) => out.push(token),
+            Err(err) => {} // println!("{}", err)
         };
-        out.push(token);
     }
     Ok(out)
 }
@@ -44,12 +42,13 @@ impl Debug for Token {
     }
 }
 
-impl From<char> for Token {
-    fn from(value: char) -> Self {
+impl TryFrom<char> for Token {
+    type Error = anyhow::Error;
+    fn try_from(value: char) -> Result<Self, Self::Error> {
         match value {
-            '(' => Token::Left_Paren,
-            ')' => Token::Right_Paren,
-            _ => todo!()
+            '(' => Ok(Token::Left_Paren),
+            ')' => Ok(Token::Right_Paren),
+            _ => Err(anyhow!("symbol not found: {}", value))
         }
     }
 }

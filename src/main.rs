@@ -39,3 +39,15 @@ fn main() -> anyhow::Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_lexer() {
+        let input = "(()".to_owned();
+        let tokens = super::scanner::scan(input).unwrap();
+        for token in tokens {
+            println!("{:?}", token);
+        }
+    }
+}
