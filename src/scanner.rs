@@ -15,6 +15,8 @@ pub enum TokenType {
     Minus,
     Slash,
     SemiColon,
+
+    Invalid(String),
 }
 pub struct Token {
     token_type: TokenType,
@@ -23,24 +25,15 @@ pub struct Token {
 }
 
 
-pub fn scan(str: String) -> anyhow::Result<(Vec<Token>, i32)> {
+pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
     let mut out = Vec::new();
     let mut line = 1usize;
-    let mut err_code = 0;
     for c in str.chars() {
         match c {
             '\n' => line += 1,
             ' ' => {},
             _ => {
-                let token_type = match TokenType::try_from(c) {
-                    Ok(x) => x,
-                    Err(err) => {
-                        println!("[line {}] Error: {}", line, err);
-                        //std::process::exit(65);
-                        err_code = 65;
-                        continue;
-                    },
-                };
+                let token_type = TokenType::from(c);
                 let token = Token {
                     token_type,
                     raw: c,
@@ -50,14 +43,17 @@ pub fn scan(str: String) -> anyhow::Result<(Vec<Token>, i32)> {
             }
         }
     }
-    Ok((out, err_code))
+    Ok(out)
 }
-
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use TokenType::*;
         let str: &str = match self.token_type.clone() {
+            Invalid(err) => {
+                write!(f, "[line {}]: Error: {}", self.line, err);
+                return Ok(());
+            },
             Left_Paren => "LEFT_PAREN",
             Right_Paren => "RIGHT_PAREN",
             Left_Brace => "LEFT_BRACE",
@@ -70,24 +66,15 @@ impl Display for Token {
             Slash => "SLASH",
             SemiColon => "SEMICOLON",
         };
-        write!(f, "{}", str)?;
+        write!(f, "{} {} null", str, self.raw)?;
         Ok(())
     }
 }
 
-impl Debug for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let name = format!("{}", self);
-        write!(f, "{} {} null", name, self.raw)?;
-        Ok(())
-    }
-}
-
-impl TryFrom<char> for TokenType {
-    type Error = anyhow::Error;
-    fn try_from(value: char) -> Result<Self, Self::Error> {
+impl From<char> for TokenType {
+    fn from(value: char) -> Self {
         use TokenType::*;
-        let token_type = match value {
+        match value {
             '(' => Left_Paren,
             ')' => Right_Paren,
             '{' => Left_Brace,
@@ -99,9 +86,16 @@ impl TryFrom<char> for TokenType {
             '-' => Minus,
             '/' => Slash,
             ';' => SemiColon,
-            _ => return Err(anyhow!("Unexpected character: {}", value))
-        };
-        Ok(token_type)
+            c => Invalid(format!("Unexpected character: {}", c)),         
+        }
     }
 }
 
+impl Token {
+    pub fn is_valid(&self) -> bool {
+        match self.token_type {
+            TokenType::Invalid(_) => false,
+            _ => true
+        }
+    }
+}
