@@ -1,13 +1,11 @@
-use std::fmt::{Debug, Display};
-
-use anyhow::anyhow;
+use std::fmt::Display;
 
 #[derive(Clone)]
 pub enum TokenType {
-    Left_Paren,
-    Right_Paren,
-    Left_Brace,
-    Right_Brace,
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
     Star,
     Dot,
     Comma,
@@ -51,13 +49,13 @@ impl Display for Token {
         use TokenType::*;
         let str: &str = match self.token_type.clone() {
             Invalid(err) => {
-                write!(f, "[line {}]: Error: {}", self.line, err);
+                write!(f, "[line {}]: Error: {}", self.line, err)?;
                 return Ok(());
             },
-            Left_Paren => "LEFT_PAREN",
-            Right_Paren => "RIGHT_PAREN",
-            Left_Brace => "LEFT_BRACE",
-            Right_Brace => "RIGHT_BRACE",
+            LeftParen => "LEFT_PAREN",
+            RightParen => "RIGHT_PAREN",
+            LeftBrace => "LEFT_BRACE",
+            RightBrace => "RIGHT_BRACE",
             Star => "STAR",
             Dot => "DOT",
             Comma => "COMMA",
@@ -75,10 +73,10 @@ impl From<char> for TokenType {
     fn from(value: char) -> Self {
         use TokenType::*;
         match value {
-            '(' => Left_Paren,
-            ')' => Right_Paren,
-            '{' => Left_Brace,
-            '}' => Right_Brace,
+            '(' => LeftParen,
+            ')' => RightParen,
+            '{' => LeftBrace,
+            '}' => RightBrace,
             '*' => Star,
             '.' => Dot,
             ',' => Comma,

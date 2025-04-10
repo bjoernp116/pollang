@@ -1,12 +1,10 @@
-use std::env;
 use std::fs;
-use std::io::{self, Write};
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 
 use anyhow::anyhow;
-use scanner::{TokenType, Token};
+use scanner::Token;
 mod scanner;
 
 #[derive(Parser, Debug)]
@@ -57,7 +55,7 @@ fn main() -> anyhow::Result<()> {
 
     match args.command {
         Command::Tokenize => {
-            let mut tokens: Vec<Token> = scanner::scan(file_contents)?;
+            let tokens: Vec<Token> = scanner::scan(file_contents)?;
             // You can use print statements as follows for debugging, they'll be visible when running tests.
             //
             let exit_code = if tokens.iter().any(|t| !t.is_valid()) {
@@ -73,21 +71,7 @@ fn main() -> anyhow::Result<()> {
             println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             exit_code.exit();
         }
-        _ => {
-            return Err(anyhow!("Unknown command"));
-        }
     }
     Ok(())
 }
 
-#[cfg(test)]
-mod test {
-    #[test]
-    fn test_lexer() {
-        let input = "(()".to_owned();
-        let tokens = super::scanner::scan(input).unwrap();
-        for token in tokens {
-            println!("{:?}", token);
-        }
-    }
-}
