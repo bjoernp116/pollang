@@ -23,9 +23,10 @@ pub struct Token {
 }
 
 
-pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
+pub fn scan(str: String) -> anyhow::Result<(Vec<Token>, i32)> {
     let mut out = Vec::new();
     let mut line = 1usize;
+    let mut err_code = 0;
     for c in str.chars() {
         match c {
             '\n' => line += 1,
@@ -35,7 +36,9 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                     Ok(x) => x,
                     Err(err) => {
                         println!("[line {}] Error: {}", line, err);
-                        std::process::exit(65);
+                        //std::process::exit(65);
+                        err_code = 65;
+                        continue;
                     },
                 };
                 let token = Token {
@@ -47,7 +50,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
             }
         }
     }
-    Ok(out)
+    Ok((out, err_code))
 }
 
 

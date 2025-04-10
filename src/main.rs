@@ -24,11 +24,14 @@ fn main() -> anyhow::Result<()> {
             });
 
             if !file_contents.is_empty() {
-                let tokens = scanner::scan(file_contents)?;
+                let (tokens, err_code) = scanner::scan(file_contents)?;
                 for token in tokens {
                     println!("{:?}", token);
                 }
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
+                if err_code != 0 {
+                    std::process::exit(err_code);
+                }
             } else {
                 println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             }
