@@ -71,6 +71,7 @@ fn main() -> anyhow::Result<()> {
             }
 
             println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
+            exit_code.exit();
         }
         _ => {
             return Err(anyhow!("Unknown command"));
