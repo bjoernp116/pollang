@@ -15,10 +15,14 @@ pub enum TokenType {
     SemiColon,
     Equal,
     Bang,
+    Greater,
+    Less,
 
     If,
     EqualEqual,
     BangEqual,
+    LessEqual,
+    GreaterEqual,
 
     Number(u64),
     StringLitteral(String),
@@ -76,19 +80,17 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                         i += 1;
                     }
                 }
-                '=' if i+1 < line.len() && line[i+1] == '=' => {
-                    let token = Token {
-                        token_type: TokenType::EqualEqual,
-                        raw: String::from("=="),
-                        line: line_number
+                '=' | '!' | '<' | '>' if i+1 < line.len() && line[i+1] == '=' => {
+                    let token_type = match line[i] {
+                        '=' => TokenType::EqualEqual,
+                        '!' => TokenType::BangEqual,
+                        '>' => TokenType::GreaterEqual,
+                        '<' => TokenType::LessEqual,
+                        _ => unreachable!()
                     };
-                    out.push(token);
-                    i += 1;
-                }
-                '!' if i+1 < line.len() && line[i+1] == '=' => {
                     let token = Token {
-                        token_type: TokenType::BangEqual,
-                        raw: String::from("!="),
+                        token_type,
+                        raw: String::from("=="),
                         line: line_number
                     };
                     out.push(token);
@@ -147,9 +149,16 @@ impl Display for Token {
             SemiColon => "SEMICOLON",
             Equal => "EQUAL",
             Bang => "BANG",
+            Greater => "GREATER",
+            Less => "LESS"
+
             If => "IF",
+
             EqualEqual => "EQUAL_EQUAL",
             BangEqual => "BANG_EQUAL",
+            LessEqual => "LESS_EQUAL",
+            GreaterEqual => "GREATER_EQUAL",
+
             Number(_) => "NUMBER",
             StringLitteral(_) => "STRING",
             Identifier(_) => "IDENTIFIER"
