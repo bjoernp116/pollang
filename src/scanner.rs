@@ -14,9 +14,11 @@ pub enum TokenType {
     Slash,
     SemiColon,
     Equal,
+    Bang,
 
     If,
     EqualEqual,
+    BangEqual,
 
     Number(u64),
     StringLitteral(String),
@@ -83,6 +85,15 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                     out.push(token);
                     i += 1;
                 }
+                '!' if i+1 < line.len() && line[i+1] == '=' => {
+                    let token = Token {
+                        token_type: TokenType::BangEqual,
+                        raw: String::from("!="),
+                        line: line_number
+                    };
+                    out.push(token);
+                    i += 1;
+                }
                 c if c.is_alphabetic() => {
                     loop {
                         if i == line.len() || !line[i].is_alphabetic() {
@@ -135,8 +146,10 @@ impl Display for Token {
             Slash => "SLASH",
             SemiColon => "SEMICOLON",
             Equal => "EQUAL",
+            Bang => "BANG",
             If => "IF",
             EqualEqual => "EQUAL_EQUAL",
+            BangEqual => "BANG_EQUAL",
             Number(_) => "NUMBER",
             StringLitteral(_) => "STRING",
             Identifier(_) => "IDENTIFIER"
@@ -162,6 +175,7 @@ impl From<char> for TokenType {
             '/' => Slash,
             ';' => SemiColon,
             '=' => Equal,
+            '!' => Bang,
             c => Invalid(format!("Unexpected character: {}", c)),         
         }
     }
