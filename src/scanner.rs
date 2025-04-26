@@ -96,6 +96,9 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                     out.push(token);
                     i += 1;
                 }
+                '/' if i+1 < line.len() && line[i+1] == '/' => {
+                    break;
+                }
                 c if c.is_alphabetic() => {
                     loop {
                         if i == line.len() || !line[i].is_alphabetic() {
