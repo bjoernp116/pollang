@@ -150,7 +150,7 @@ impl Display for Token {
             Equal => "EQUAL",
             Bang => "BANG",
             Greater => "GREATER",
-            Less => "LESS"
+            Less => "LESS",
 
             If => "IF",
 
