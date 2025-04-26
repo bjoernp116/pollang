@@ -17,9 +17,9 @@ pub enum TokenType {
     Invalid(String),
 }
 pub struct Token {
-    token_type: TokenType,
-    raw: char,
-    line: usize
+    pub token_type: TokenType,
+    pub raw: char,
+    pub line: usize
 }
 
 

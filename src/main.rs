@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 
 use anyhow::anyhow;
-use scanner::Token;
+use scanner::{Token, TokenType};
 mod scanner;
 
 #[derive(Parser, Debug)]
@@ -65,7 +65,11 @@ fn main() -> anyhow::Result<()> {
             };
 
             for token in tokens {
-                println!("{}", token);
+                if let TokenType::Invalid(_) = token.token_type {
+                    eprintln!("[line {}]: Error: {}", token.line, token.raw);
+                } else {
+                    println!("{}", token);
+                }
             }
 
             println!("EOF null"); // Placeholder, remove this line when implementing the scanner
@@ -74,4 +78,5 @@ fn main() -> anyhow::Result<()> {
     }
     Ok(())
 }
+
 
