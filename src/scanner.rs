@@ -66,7 +66,10 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 }
                 '"' => {
                     loop {
+                        buffer.push(line[i]);
+                        i += 1;
                         if i == line.len() || line[i] == '"' {
+                            buffer.push('"');
                             let token = Token {
                                 token_type: TokenType::StringLitteral(buffer.clone()),
                                 raw: buffer.clone(),
@@ -76,8 +79,6 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                             out.push(token);
                             break;
                         }
-                        buffer.push(line[i]);
-                        i += 1;
                     }
                 }
                 '=' | '!' | '<' | '>' if i+1 < line.len() && line[i+1] == '=' => {
