@@ -66,7 +66,7 @@ fn main() -> anyhow::Result<()> {
 
             for token in tokens {
                 if let TokenType::Invalid(e) = token.token_type {
-                    eprintln!("[line {}]: Error: {}", token.line, e);
+                    eprintln!("[line {}] Error: {}", token.line, e);
                 } else {
                     println!("{}", token);
                 }
