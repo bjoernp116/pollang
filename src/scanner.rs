@@ -59,7 +59,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 }
                 '"' => {
                     loop {
-                        if line[i] == '"' {
+                        if i == line.len() || line[i] == '"' {
                             let token = Token {
                                 token_type: TokenType::StringLitteral(buffer.clone()),
                                 raw: buffer.clone(),
@@ -73,7 +73,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                         i += 1;
                     }
                 }
-                '=' if line[i+1] == '=' => {
+                '=' if i+1 < line.len() && line[i+1] == '=' => {
                     let token = Token {
                         token_type: TokenType::EqualEqual,
                         raw: String::from("=="),
@@ -84,7 +84,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 }
                 c if c.is_alphabetic() => {
                     loop {
-                        if !line[i].is_alphabetic() {
+                        if i == line.len() || !line[i].is_alphabetic() {
                             let token = Token {
                                 token_type: TokenType::from(buffer.clone()),
                                 raw: buffer.clone(),
