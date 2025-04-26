@@ -44,7 +44,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
         let mut i = 0;
         while i < line.len() {
             match line[i] {
-                ' ' | '\n' => {},
+                ' ' | '\n' | '\t' => {},
                 x if x.is_numeric() => {
                     loop {
                         if i == line.len() || !line[i].is_numeric() {
