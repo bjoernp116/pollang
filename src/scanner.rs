@@ -49,7 +49,7 @@ impl Display for Token {
         use TokenType::*;
         let str: &str = match self.token_type.clone() {
             Invalid(err) => {
-                eprintln!("[line {}]: Error: {}", self.line, err);
+                eprint!("[line {}]: Error: {}", self.line, err);
                 return Ok(());
             },
             LeftParen => "LEFT_PAREN",
