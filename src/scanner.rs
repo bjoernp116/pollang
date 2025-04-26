@@ -13,32 +13,102 @@ pub enum TokenType {
     Minus,
     Slash,
     SemiColon,
+    Equal,
 
+    If,
+    EqualEqual,
+
+    Number(u64),
+    StringLitteral(String),
+    Identifier(String),
     Invalid(String),
 }
 pub struct Token {
     pub token_type: TokenType,
-    pub raw: char,
+    pub raw: String,
     pub line: usize
 }
 
-
 pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
     let mut out = Vec::new();
-    let mut line = 1usize;
-    for c in str.chars() {
-        match c {
-            '\n' => line += 1,
-            ' ' => {},
-            _ => {
-                let token_type = TokenType::from(c);
-                let token = Token {
-                    token_type,
-                    raw: c,
-                    line
-                };
-                out.push(token)
+    let mut buffer: String = String::new();
+    for (line_number, line) in str.lines().enumerate() {
+        let line: Vec<char> = line.chars().collect();
+        let mut i = 0;
+        while i < line.len() {
+            match line[i] {
+                ' ' | '\n' => {},
+                x if x.is_numeric() => {
+                    loop {
+                        if i == line.len() || !line[i].is_numeric() {
+                            
+                            let number = buffer.clone().parse::<u64>()?;
+                            let token = Token {
+                                token_type: TokenType::Number(number),
+                                raw: buffer.clone(),
+                                line: line_number
+                            };
+                            buffer.clear();
+                            i -= 1;
+                            out.push(token);
+                            break;
+                        }
+                        buffer.push(line[i]);
+                        i += 1;
+                    }
+                }
+                '"' => {
+                    loop {
+                        if line[i] == '"' {
+                            let token = Token {
+                                token_type: TokenType::StringLitteral(buffer.clone()),
+                                raw: buffer.clone(),
+                                line: line_number
+                            };
+                            buffer.clear();
+                            out.push(token);
+                            break;
+                        }
+                        buffer.push(line[i]);
+                        i += 1;
+                    }
+                }
+                '=' if line[i+1] == '=' => {
+                    let token = Token {
+                        token_type: TokenType::EqualEqual,
+                        raw: String::from("=="),
+                        line: line_number
+                    };
+                    out.push(token);
+                    i += 1;
+                }
+                c if c.is_alphabetic() => {
+                    loop {
+                        if !line[i].is_alphabetic() {
+                            let token = Token {
+                                token_type: TokenType::from(buffer.clone()),
+                                raw: buffer.clone(),
+                                line: line_number
+                            };
+                            buffer.clear();
+                            out.push(token);
+                            i -= 1;
+                            break;
+                        }
+                        buffer.push(line[i]);
+                        i += 1;
+                    }   
+                }
+                _ => {
+                    let token = Token {
+                        token_type: TokenType::from(line[i]),
+                        raw: format!("{}", line[i]),
+                        line: line_number
+                    };
+                    out.push(token);
+                }
             }
+            i += 1;
         }
     }
     Ok(out)
@@ -63,6 +133,12 @@ impl Display for Token {
             Minus => "MINUS",
             Slash => "SLASH",
             SemiColon => "SEMICOLON",
+            Equal => "EQUAL",
+            If => "IF",
+            EqualEqual => "EQUAL_EQUAL",
+            Number(_) => "NUMBER",
+            StringLitteral(_) => "STRING",
+            Identifier(_) => "IDENTIFIER"
         };
         write!(f, "{} {} null", str, self.raw)?;
         Ok(())
@@ -84,7 +160,18 @@ impl From<char> for TokenType {
             '-' => Minus,
             '/' => Slash,
             ';' => SemiColon,
+            '=' => Equal,
             c => Invalid(format!("Unexpected character: {}", c)),         
+        }
+    }
+}
+
+impl From<String> for TokenType {
+    fn from(value: String) -> Self {
+        use TokenType::*;
+        match value.as_str() {
+            "if" => If,
+            _ => Identifier(value)
         }
     }
 }
@@ -97,3 +184,5 @@ impl Token {
         }
     }
 }
+
+
