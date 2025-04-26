@@ -90,7 +90,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                     };
                     let token = Token {
                         token_type,
-                        raw: String::from("=="),
+                        raw: format!("{}{}", line[i], line[i+1]),
                         line: line_number
                     };
                     out.push(token);
@@ -185,6 +185,8 @@ impl From<char> for TokenType {
             ';' => SemiColon,
             '=' => Equal,
             '!' => Bang,
+            '>' => Greater,
+            '<' => Less,
             c => Invalid(format!("Unexpected character: {}", c)),         
         }
     }
