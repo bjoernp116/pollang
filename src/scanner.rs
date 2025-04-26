@@ -33,6 +33,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
     let mut out = Vec::new();
     let mut buffer: String = String::new();
     for (line_number, line) in str.lines().enumerate() {
+        let line_number = line_number + 1;
         let line: Vec<char> = line.chars().collect();
         let mut i = 0;
         while i < line.len() {
