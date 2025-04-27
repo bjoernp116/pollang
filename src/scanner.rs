@@ -24,7 +24,7 @@ pub enum TokenType {
     LessEqual,
     GreaterEqual,
 
-    Number(u64),
+    Number(f64),
     StringLitteral(String),
     Identifier(String),
     Invalid(String),
@@ -46,10 +46,17 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
             match line[i] {
                 ' ' | '\n' | '\t' => {},
                 x if x.is_numeric() => {
+                    let mut float = false;
                     loop {
+                        if i != line.len() && line[i] == '.' && !float {
+                            float = true;
+                            buffer.push('.');
+                            i+=1;
+                            continue;
+                        }
                         if i == line.len() || !line[i].is_numeric() {
                             
-                            let number = buffer.clone().parse::<u64>()?;
+                            let number = buffer.clone().parse::<f64>()?;
                             let token = Token {
                                 token_type: TokenType::Number(number),
                                 raw: buffer.clone(),
@@ -181,7 +188,7 @@ impl Display for Token {
             Identifier(_) => "IDENTIFIER"
         };
         let inner = match self.token_type.clone() {
-            Number(n) => format!("{}", n),
+            Number(n) => format!("{:?}", n),
             StringLitteral(s) | Identifier(s) => format!("{}", s),
             _ => format!("null")
         };
