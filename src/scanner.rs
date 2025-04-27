@@ -122,7 +122,8 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 }
                 c if c.is_alphabetic() || c == '_' => {
                     loop {
-                        if i == line.len() || !(line[i].is_alphabetic() || line[i] == '_') {
+                        if i == line.len() 
+                        || !(line[i].is_alphanumeric() || line[i] == '_') {
                             let token = Token {
                                 token_type: TokenType::from(buffer.clone()),
                                 raw: buffer.clone(),
