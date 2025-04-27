@@ -120,9 +120,9 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 '/' if i+1 < line.len() && line[i+1] == '/' => {
                     break;
                 }
-                c if c.is_alphabetic() => {
+                c if c.is_alphabetic() || c == '_' => {
                     loop {
-                        if i == line.len() || !line[i].is_alphabetic() {
+                        if i == line.len() || !(line[i].is_alphabetic() || line[i] == '_') {
                             let token = Token {
                                 token_type: TokenType::from(buffer.clone()),
                                 raw: buffer.clone(),
@@ -189,7 +189,7 @@ impl Display for Token {
         };
         let inner = match self.token_type.clone() {
             Number(n) => format!("{:?}", n),
-            StringLitteral(s) | Identifier(s) => format!("{}", s),
+            StringLitteral(s) => format!("{}", s),
             _ => format!("null")
         };
         write!(f, "{} {} {}", str, self.raw, inner)?;
