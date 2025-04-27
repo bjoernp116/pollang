@@ -66,8 +66,20 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 }
                 '"' => {
                     loop {
-                        buffer.push(line[i]);
                         i += 1;
+                        if i >= line.len() - 1 {
+                            let token = Token {
+                                token_type: TokenType::Invalid(format!("Unterminated string.")),
+                                raw: buffer.clone(),
+                                line: line_number
+                            };
+                            out.push(token);
+                            break;
+                        }
+                        
+                        //println!("{}/{}, {}", i, line.len(), line[i]);
+
+                        buffer.push(line[i]);
                         if i == line.len() || line[i] == '"' {
                             buffer.push('"');
                             let token = Token {
@@ -167,7 +179,12 @@ impl Display for Token {
             StringLitteral(_) => "STRING",
             Identifier(_) => "IDENTIFIER"
         };
-        write!(f, "{} {} null", str, self.raw)?;
+        let inner = match self.token_type.clone() {
+            Number(n) => format!("{}", n),
+            StringLitteral(s) | Identifier(s) => format!("{}", s),
+            _ => format!("null")
+        };
+        write!(f, "{} {} {}", str, self.raw, inner)?;
         Ok(())
     }
 }
