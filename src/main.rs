@@ -6,6 +6,7 @@ use clap::{Parser, ValueEnum};
 use anyhow::anyhow;
 use scanner::{Token, TokenType};
 mod scanner;
+mod parser;
 
 #[derive(Parser, Debug)]
 #[command(version, long_about = None)]
