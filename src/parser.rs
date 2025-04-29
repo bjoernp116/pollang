@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fmt::Display};
+use std::{collections::VecDeque, fmt::{write, Display}};
 
 use crate::scanner::{Token, TokenType};
 use anyhow::anyhow;
@@ -6,23 +6,52 @@ use anyhow::anyhow;
 
 
 pub enum Node {
-    Number(f64),
     Binary {
         left: Box<Node>,
         right: Box<Node>,
-        operator: Operator,
+        operator: BinaryOperator,
     },
     /*Parenthesis {
         left: Box<Node>,
         right: Box<Node>,
     },*/
     Parenthesis(Box<Node>),
+    Unary(UnaryOperator, Box<Node>),
+    Litteral(Litteral)
+}
+
+pub enum Litteral {
+    Number(f64),
     Boolean(bool),
     Nil,
     String(String),
 }
+impl Display for Litteral {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Litteral::Number(n) => write!(f, "{:?}", n),
+            Litteral::Boolean(b) => write!(f, "{}", b),
+            Litteral::Nil => write!(f, "nil"),
+            Litteral::String(s) => write!(f, "{}", s),
+        }
+    }
+}
 
-pub enum Operator {
+pub enum UnaryOperator {
+    Not,
+    Neg,
+}
+
+impl Display for UnaryOperator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Not => write!(f, "!"),
+            Self::Neg => write!(f, "-")
+        }
+    }
+}
+
+pub enum BinaryOperator {
     Add,
     Sub,
     Mul,
@@ -30,14 +59,14 @@ pub enum Operator {
     Pow,
 }
 
-impl Display for Operator {
+impl Display for BinaryOperator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let op = match self {
-            Operator::Add => '+',
-            Operator::Sub => '-',
-            Operator::Mul => '*',
-            Operator::Div => '/',
-            Operator::Pow => '^',
+            BinaryOperator::Add => '+',
+            BinaryOperator::Sub => '-',
+            BinaryOperator::Mul => '*',
+            BinaryOperator::Div => '/',
+            BinaryOperator::Pow => '^',
         };
         write!(f, "{}", op)
     }
@@ -75,7 +104,7 @@ impl AstFactory {
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
-                        operator: to_operator(op)?
+                        operator: op.try_into()?
                     };
                 },
                 _ => break
@@ -98,7 +127,7 @@ impl AstFactory {
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
-                        operator: to_operator(op)?
+                        operator: op.try_into()?
                     };
                 },
                 _ => break
@@ -121,7 +150,7 @@ impl AstFactory {
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
-                        operator: to_operator(op)?
+                        operator: op.try_into()?
                     };
                 },
                 _ => break
@@ -136,8 +165,17 @@ impl AstFactory {
         }
         match self.tokens[self.current].token_type {
             TokenType::LeftParen => self.parse_paren(),
+            TokenType::Bang | TokenType::Minus => self.parse_unary(),
             _ => self.parse_number()
         }
+    }
+
+    fn parse_unary(&mut self) -> anyhow::Result<Node> {
+        let op = self.tokens[self.current].clone();
+        self.current += 1;
+        let node: Node = self.parse_primary()?;
+        let unary = Node::Unary(op.try_into()?, Box::new(node));
+        Ok(unary)
     }
 
     fn parse_paren(&mut self) -> anyhow::Result<Node> {
@@ -145,7 +183,7 @@ impl AstFactory {
         let mut private_tokens: VecDeque<Token> = VecDeque::new();
 
         if self.tokens.len() == 1 {
-            return Ok(Node::Number(0.));
+            return Ok(Node::Litteral(Litteral::Number(0.)));
         }
         match self.tokens[self.current].token_type {
             TokenType::LeftParen => {},
@@ -181,23 +219,23 @@ impl AstFactory {
             TokenType::Number(x) => {
                 let number = *x;
                 self.current += 1;
-                Ok(Node::Number(number as f64))
+                Ok(Node::Litteral(Litteral::Number(number as f64)))
             },
             TokenType::True => {
                 self.current += 1;
-                Ok(Node::Boolean(true))
+                Ok(Node::Litteral(Litteral::Boolean(true)))
             },
             TokenType::False => {
                 self.current += 1;
-                Ok(Node::Boolean(false))
+                Ok(Node::Litteral(Litteral::Boolean(false)))
             },
             TokenType::Nil => {
                 self.current += 1;
-                Ok(Node::Nil)
+                Ok(Node::Litteral(Litteral::Nil))
             },
             TokenType::StringLitteral(s) => {
                 self.current += 1;
-                Ok(Node::String(s.clone()))
+                Ok(Node::Litteral(Litteral::String(s.clone())))
             }
             _ => Err(anyhow!("The token {} is not a number!", &self.tokens[self.current]))
         }
@@ -205,25 +243,37 @@ impl AstFactory {
 
 }
 
-fn to_operator(token: Token) -> anyhow::Result<Operator> {
-    match token.token_type {
-        TokenType::Plus => Ok(Operator::Add),
-        TokenType::Minus => Ok(Operator::Sub),
-        TokenType::Star => Ok(Operator::Mul),
-        TokenType::Slash => Ok(Operator::Div),
-        TokenType::Carrot => Ok(Operator::Pow),
-        _ => Err(anyhow!("Cant convert Token {} to operator", token))
+impl TryFrom<Token> for BinaryOperator {
+    type Error = anyhow::Error;
+    fn try_from(token: Token) -> anyhow::Result<BinaryOperator> {
+        match token.token_type {
+            TokenType::Plus => Ok(BinaryOperator::Add),
+            TokenType::Minus => Ok(BinaryOperator::Sub),
+            TokenType::Star => Ok(BinaryOperator::Mul),
+            TokenType::Slash => Ok(BinaryOperator::Div),
+            TokenType::Carrot => Ok(BinaryOperator::Pow),
+            _ => Err(anyhow!("Cant convert Token {} to operator", token))
+        }
+    }
+}
+
+impl TryFrom<Token> for UnaryOperator {
+    type Error = anyhow::Error;
+    fn try_from(token: Token) -> anyhow::Result<UnaryOperator> {
+        match token.token_type {
+            TokenType::Bang => Ok(UnaryOperator::Not),
+            TokenType::Minus => Ok(UnaryOperator::Neg),
+            _ => Err(anyhow!("Cant convert Token {} to operator", token))
+        }
     }
 }
 
 impl Display for Node {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Node::Number(n) => write!(f, "{:?}", n),
+            Node::Unary(op, e) => write!(f, "({} {})", op, e),
+            Node::Litteral(l) => write!(f, "{}", l),
             Node::Binary { left, right, operator } => write!(f, "({} {} {})", operator, left, right),
-            Node::Boolean(b) => write!(f, "{}", b),
-            Node::Nil => write!(f, "nil"),
-            Node::String(s) => write!(f, "{}", s),
             Node::Parenthesis(e) => write!(f, "(group {})", e)
         }
     }
