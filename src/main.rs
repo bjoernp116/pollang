@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 
 use anyhow::anyhow;
+use parser::AstFactory;
 use scanner::{Token, TokenType};
 mod scanner;
 mod parser;
@@ -22,6 +23,8 @@ struct Cli {
 enum Command {
     #[clap(name = "tokenize", alias = "t")]
     Tokenize,
+    #[clap(name = "parse", alias = "p")]
+    Parse,
 }
 
 enum ExitCode {
@@ -74,6 +77,31 @@ fn main() -> anyhow::Result<()> {
             }
 
             println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
+            exit_code.exit();
+        },
+        Command::Parse => {
+            let tokens: Vec<Token> = scanner::scan(file_contents)?;
+            // You can use print statements as follows for debugging, they'll be visible when running tests.
+            //
+            let exit_code = if tokens.iter().any(|t| !t.is_valid()) {
+                ExitCode::Error(65)
+            } else {
+                ExitCode::Success
+            };
+
+            for token in tokens.clone() {
+                if let TokenType::Invalid(e) = token.token_type {
+                    eprintln!("[line {}] Error: {}", token.line, e);
+                } else {
+                    println!("{}", token);
+                }
+            }
+
+            let mut ast = AstFactory::new(tokens);
+            let head = ast.parse()?;
+
+            println!("{}", head);
+
             exit_code.exit();
         }
     }

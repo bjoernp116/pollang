@@ -17,6 +17,7 @@ pub enum TokenType {
     Bang,
     Greater,
     Less,
+    Carrot,
 
     If,
     And,
@@ -45,6 +46,7 @@ pub enum TokenType {
     Identifier(String),
     Invalid(String),
 }
+#[derive(Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub raw: String,
@@ -71,7 +73,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                             continue;
                         }
                         if i == line.len() || !line[i].is_numeric() {
-                            
+
                             let number = buffer.clone().parse::<f64>()?;
                             let token = Token {
                                 token_type: TokenType::Number(number),
@@ -99,10 +101,10 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                             out.push(token);
                             break;
                         }
-                        
+
                         //println!("{}/{}, {}", i, line.len(), line[i]);
 
-                       
+
                         if line[i] == '"' {
                             let token = Token {
                                 token_type: TokenType::StringLitteral(buffer.clone()),
@@ -138,7 +140,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 }
                 c if c.is_alphabetic() || c == '_' => {
                     loop {
-                        if i == line.len() 
+                        if i == line.len()
                         || !(line[i].is_alphanumeric() || line[i] == '_') {
                             let token = Token {
                                 token_type: TokenType::from(buffer.clone()),
@@ -152,7 +154,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                         }
                         buffer.push(line[i]);
                         i += 1;
-                    }   
+                    }
                 }
                 _ => {
                     let token = Token {
@@ -192,6 +194,7 @@ impl Display for Token {
             Bang => "BANG",
             Greater => "GREATER",
             Less => "LESS",
+            Carrot => "CARROT",
 
             If => "IF",
             And => "AND",
@@ -207,8 +210,8 @@ impl Display for Token {
             Super => "SUPER",
             This => "THIS",
             True => "TRUE",
-            Var => "VAR", 
-            While => "WHILE", 
+            Var => "VAR",
+            While => "WHILE",
 
             EqualEqual => "EQUAL_EQUAL",
             BangEqual => "BANG_EQUAL",
@@ -248,7 +251,8 @@ impl From<char> for TokenType {
             '!' => Bang,
             '>' => Greater,
             '<' => Less,
-            c => Invalid(format!("Unexpected character: {}", c)),         
+            '^' => Carrot,
+            c => Invalid(format!("Unexpected character: {}", c)),
         }
     }
 }
