@@ -14,6 +14,7 @@ pub enum Node {
     },
     Boolean(bool),
     Nil,
+    String(String),
 }
 
 pub enum Operator {
@@ -188,6 +189,10 @@ impl AstFactory {
             TokenType::Nil => {
                 self.current += 1;
                 Ok(Node::Nil)
+            },
+            TokenType::StringLitteral(s) => {
+                self.current += 1;
+                Ok(Node::String(s.clone()))
             }
             _ => Err(anyhow!("The token {} is not a number!", &self.tokens[self.current]))
         }
@@ -212,7 +217,8 @@ impl Display for Node {
             Node::Number(n) => write!(f, "{:?}", n),
             Node::Binary { left, right, operator } => write!(f, "({} {} {})", operator, left, right),
             Node::Boolean(b) => write!(f, "{}", b),
-            Node::Nil => write!(f, "nil")
+            Node::Nil => write!(f, "nil"),
+            Node::String(s) => write!(f, "{}", s)
         }
     }
 }
