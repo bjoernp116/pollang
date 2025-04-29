@@ -57,16 +57,28 @@ pub enum BinaryOperator {
     Mul,
     Div,
     Pow,
+    Eq,
+    LEq,
+    GEq,
+    NEq,
+    L,
+    G,
 }
 
 impl Display for BinaryOperator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let op = match self {
-            BinaryOperator::Add => '+',
-            BinaryOperator::Sub => '-',
-            BinaryOperator::Mul => '*',
-            BinaryOperator::Div => '/',
-            BinaryOperator::Pow => '^',
+            BinaryOperator::Add => "+",
+            BinaryOperator::Sub => "-",
+            BinaryOperator::Mul => "*",
+            BinaryOperator::Div => "/",
+            BinaryOperator::Pow => "^",
+            BinaryOperator::Eq => "==",
+            BinaryOperator::LEq => "<=",
+            BinaryOperator::GEq => ">=",
+            BinaryOperator::NEq => "!=",
+            BinaryOperator::L => "<",
+            BinaryOperator::G => ">",
         };
         write!(f, "{}", op)
     }
@@ -87,7 +99,35 @@ impl AstFactory {
         }
     }
     pub fn parse(&mut self) -> anyhow::Result<Node> {
-        Ok(self.parse_term()?)
+        Ok(self.parse_equality()?)
+    }
+
+    fn parse_equality(&mut self) -> anyhow::Result<Node> {
+        let mut node: Node = self.parse_term()?;
+        while self.current < self.tokens.len() {
+            match self.tokens[self.current].token_type {
+                TokenType::EqualEqual |
+                TokenType::GreaterEqual |
+                TokenType::LessEqual |
+                TokenType::BangEqual |
+                TokenType::Greater |
+                TokenType::Less => {
+                    let op = self.tokens[self.current].clone();
+                    self.current += 1;
+                    if self.current >= self.tokens.len() {
+                        break;
+                    }
+                    let right = Box::new(self.parse_term()?);
+                    node = Node::Binary {
+                        left: Box::new(node),
+                        right,
+                        operator: op.try_into()?
+                    };
+                },
+                _ => break
+            }
+        }
+        Ok(node)
     }
 
     fn parse_term(&mut self) -> anyhow::Result<Node> {
@@ -252,6 +292,12 @@ impl TryFrom<Token> for BinaryOperator {
             TokenType::Star => Ok(BinaryOperator::Mul),
             TokenType::Slash => Ok(BinaryOperator::Div),
             TokenType::Carrot => Ok(BinaryOperator::Pow),
+            TokenType::LessEqual => Ok(BinaryOperator::LEq),
+            TokenType::GreaterEqual => Ok(BinaryOperator::GEq),
+            TokenType::EqualEqual => Ok(BinaryOperator::Eq),
+            TokenType::BangEqual => Ok(BinaryOperator::NEq),
+            TokenType::Less => Ok(BinaryOperator::L),
+            TokenType::Greater => Ok(BinaryOperator::G),
             _ => Err(anyhow!("Cant convert Token {} to operator", token))
         }
     }
