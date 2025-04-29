@@ -11,7 +11,9 @@ pub enum Node {
         left: Box<Node>,
         right: Box<Node>,
         operator: Operator,
-    }
+    },
+    Boolean(bool),
+    Nil,
 }
 
 pub enum Operator {
@@ -175,9 +177,22 @@ impl AstFactory {
                 self.current += 1;
                 Ok(Node::Number(number as f64))
             },
+            TokenType::True => {
+                self.current += 1;
+                Ok(Node::Boolean(true))
+            },
+            TokenType::False => {
+                self.current += 1;
+                Ok(Node::Boolean(false))
+            },
+            TokenType::Nil => {
+                self.current += 1;
+                Ok(Node::Nil)
+            }
             _ => Err(anyhow!("The token {} is not a number!", &self.tokens[self.current]))
         }
     }
+
 }
 
 fn to_operator(token: Token) -> anyhow::Result<Operator> {
@@ -196,6 +211,8 @@ impl Display for Node {
         match self {
             Node::Number(n) => write!(f, "{:?}", n),
             Node::Binary { left, right, operator } => write!(f, "({} {} {})", operator, left, right),
+            Node::Boolean(b) => write!(f, "{}", b),
+            Node::Nil => write!(f, "nil")
         }
     }
 }

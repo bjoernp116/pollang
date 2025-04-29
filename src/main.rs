@@ -89,13 +89,13 @@ fn main() -> anyhow::Result<()> {
                 ExitCode::Success
             };
 
-            for token in tokens.clone() {
+            /*for token in tokens.clone() {
                 if let TokenType::Invalid(e) = token.token_type {
                     eprintln!("[line {}] Error: {}", token.line, e);
                 } else {
                     println!("{}", token);
                 }
-            }
+            }*/
 
             let mut ast = AstFactory::new(tokens);
             let head = ast.parse()?;
