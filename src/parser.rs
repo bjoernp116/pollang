@@ -224,7 +224,7 @@ impl Display for Node {
             Node::Boolean(b) => write!(f, "{}", b),
             Node::Nil => write!(f, "nil"),
             Node::String(s) => write!(f, "{}", s),
-            Node::Parenthesis(e) => write!(f, "group {}", e)
+            Node::Parenthesis(e) => write!(f, "(group {})", e)
         }
     }
 }
