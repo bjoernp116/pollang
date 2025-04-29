@@ -12,6 +12,11 @@ pub enum Node {
         right: Box<Node>,
         operator: Operator,
     },
+    /*Parenthesis {
+        left: Box<Node>,
+        right: Box<Node>,
+    },*/
+    Parenthesis(Box<Node>),
     Boolean(bool),
     Nil,
     String(String),
@@ -165,7 +170,7 @@ impl AstFactory {
             current: 0,
         };
         let node = parser.parse_term()?;
-        Ok(node)
+        Ok(Node::Parenthesis(Box::new(node)))
     }
 
     fn parse_number(&mut self) -> anyhow::Result<Node> {
@@ -218,7 +223,8 @@ impl Display for Node {
             Node::Binary { left, right, operator } => write!(f, "({} {} {})", operator, left, right),
             Node::Boolean(b) => write!(f, "{}", b),
             Node::Nil => write!(f, "nil"),
-            Node::String(s) => write!(f, "{}", s)
+            Node::String(s) => write!(f, "{}", s),
+            Node::Parenthesis(e) => write!(f, "group {}", e)
         }
     }
 }
