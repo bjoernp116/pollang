@@ -5,6 +5,7 @@ use anyhow::anyhow;
 
 
 
+#[derive(Clone)]
 pub enum Node {
     Binary {
         left: Box<Node>,
@@ -20,6 +21,7 @@ pub enum Node {
     Litteral(Litteral)
 }
 
+#[derive(Clone)]
 pub enum Litteral {
     Number(f64),
     Boolean(bool),
@@ -37,6 +39,7 @@ impl Display for Litteral {
     }
 }
 
+#[derive(Clone)]
 pub enum UnaryOperator {
     Not,
     Neg,
@@ -51,12 +54,14 @@ impl Display for UnaryOperator {
     }
 }
 
+#[derive(Clone)]
 pub enum BinaryOperator {
     Add,
     Sub,
     Mul,
     Div,
     Pow,
+
     Eq,
     LEq,
     GEq,

@@ -8,6 +8,7 @@ use parser::AstFactory;
 use scanner::{Token, TokenType};
 mod scanner;
 mod parser;
+mod interpreter;
 
 #[derive(Parser, Debug)]
 #[command(version, long_about = None)]
@@ -25,6 +26,8 @@ enum Command {
     Tokenize,
     #[clap(name = "parse", alias = "p")]
     Parse,
+    #[clap(name = "evaluate", alias = "e")]
+    Evaluate,
 }
 
 enum ExitCode {
@@ -107,6 +110,40 @@ fn main() -> anyhow::Result<()> {
             };
 
             exit_code.exit();
+        },
+        Command::Evaluate => {
+            let tokens: Vec<Token> = scanner::scan(file_contents)?;
+            // You can use print statements as follows for debugging, they'll be visible when running tests.
+            //
+            let mut exit_code = if tokens.iter().any(|t| !t.is_valid()) {
+                ExitCode::Error(65)
+            } else {
+                ExitCode::Success
+            };
+
+            /*for token in tokens.clone() {
+                if let TokenType::Invalid(e) = token.token_type {
+                    eprintln!("[line {}] Error: {}", token.line, e);
+                } else {
+                    println!("{}", token);
+                }
+            }*/
+
+            let mut ast = AstFactory::new(tokens);
+            let head = ast.parse();
+            match head {
+                Ok(mut h) => {
+                    let res = h.evaluate()?;
+                    println!("{}", res);
+                },
+                Err(e) => {
+                    eprintln!("{}", e);
+                    exit_code = ExitCode::Error(65);
+                    exit_code.exit();
+                }
+            };
+
+
         }
     }
     Ok(())
