@@ -247,7 +247,7 @@ impl AstFactory {
             tokens: private_tokens,
             current: 0,
         };
-        let node = parser.parse_term()?;
+        let node = parser.parse_equality()?;
         Ok(Node::Parenthesis(Box::new(node)))
     }
 
