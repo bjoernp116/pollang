@@ -7,9 +7,10 @@ impl Statement {
     pub fn execute(&mut self) -> anyhow::Result<()> {
         match self {
             Self::Expression(expr) => {
-                expr.evaluate();
+                expr.evaluate()?;
             },
             Self::Print(expr) => {
+                let expr = expr.evaluate()?;
                 println!("{}", expr);
             }
 
