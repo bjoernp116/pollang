@@ -79,6 +79,7 @@ impl UnaryOperator {
             (Not, Boolean(n)) => Ok(Boolean(!n)),
             (Not, Nil) => Ok(Boolean(true)),
             (Not, _) => Ok(Boolean(false)),
+            (Neg, _) => Err(anyhow!("Operand must be a number")),
             _ => Err(anyhow!("cant calculate {} {}", self, lit.clone()))
         }
     }

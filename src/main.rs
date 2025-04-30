@@ -133,9 +133,18 @@ fn main() -> anyhow::Result<()> {
             let head = ast.parse();
             match head {
                 Ok(mut h) => {
-                    let res = h.evaluate()?;
-                    println!("{}", res);
-                    exit_code.exit();
+                    let res = h.evaluate();
+                    match res {
+                        Ok(res) => {
+                            println!("{}", res);
+                            exit_code.exit();
+                        },
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            exit_code = ExitCode::Error(65);
+                            exit_code.exit();
+                        }
+                    }
                 },
                 Err(e) => {
                     eprintln!("{}", e);
