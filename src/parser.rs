@@ -39,6 +39,17 @@ impl Display for Litteral {
     }
 }
 
+impl std::fmt::Debug for Litteral {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Litteral::Number(n) => write!(f, "{:?}", n),
+            Litteral::Boolean(b) => write!(f, "{}", b),
+            Litteral::Nil => write!(f, "nil"),
+            Litteral::String(s) => write!(f, "{}", s),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub enum UnaryOperator {
     Not,
@@ -326,6 +337,17 @@ impl Display for Node {
         match self {
             Node::Unary(op, e) => write!(f, "({} {})", op, e),
             Node::Litteral(l) => write!(f, "{}", l),
+            Node::Binary { left, right, operator } => write!(f, "({} {} {})", operator, left, right),
+            Node::Parenthesis(e) => write!(f, "(group {})", e)
+        }
+    }
+}
+
+impl std::fmt::Debug for Node {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Node::Unary(op, e) => write!(f, "({} {})", op, e),
+            Node::Litteral(l) => write!(f, "{:?}", l),
             Node::Binary { left, right, operator } => write!(f, "({} {} {})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {})", e)
         }

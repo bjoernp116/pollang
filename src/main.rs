@@ -102,7 +102,7 @@ fn main() -> anyhow::Result<()> {
 
             let mut ast = AstFactory::new(tokens);
             let head = match ast.parse() {
-                Ok(h) => println!("{}", h),
+                Ok(h) => println!("{:?}", h),
                 Err(e) => {
                     eprintln!("{}", e);
                     exit_code = ExitCode::Error(65);
@@ -135,6 +135,7 @@ fn main() -> anyhow::Result<()> {
                 Ok(mut h) => {
                     let res = h.evaluate()?;
                     println!("{}", res);
+                    exit_code.exit();
                 },
                 Err(e) => {
                     eprintln!("{}", e);
@@ -142,7 +143,6 @@ fn main() -> anyhow::Result<()> {
                     exit_code.exit();
                 }
             };
-
 
         }
     }
