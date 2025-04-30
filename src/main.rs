@@ -143,10 +143,7 @@ fn main() -> anyhow::Result<()> {
                     exit_code.exit();
                 }
             };
-
         }
     }
     Ok(())
 }
-
-
