@@ -335,7 +335,7 @@ impl TryFrom<Token> for UnaryOperator {
 impl Display for Node {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Node::Unary(op, e) => write!(f, "({} {:?})", op, e),
+            Node::Unary(op, e) => write!(f, "({} {})", op, e),
             Node::Litteral(l) => write!(f, "{}", l),
             Node::Binary { left, right, operator } => write!(f, "({} {} {})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {})", e)
@@ -346,7 +346,7 @@ impl Display for Node {
 impl std::fmt::Debug for Node {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Node::Unary(op, e) => write!(f, "({} {})", op, e),
+            Node::Unary(op, e) => write!(f, "({} {:?})", op, e),
             Node::Litteral(l) => write!(f, "{:?}", l),
             Node::Binary { left, right, operator } => write!(f, "({} {:?} {:?})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {:?})", e)
