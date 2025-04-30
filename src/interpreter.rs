@@ -62,9 +62,10 @@ impl BinaryOperator {
 
             (Boolean(l), Eq, Boolean(r)) => Ok(Boolean(l == r)),
             (Boolean(l), NEq, Boolean(r)) => Ok(Boolean(l != r)),
-            (_, Eq | NEq | LEq | GEq | L | G, _) => Ok(Boolean(false)),
-
-            _ => Err(anyhow!("cant calculate {} {} {}", left.clone(), self, right.clone()))
+            (String(_), Add, Number(_)) |
+            (Number(_), Add, String(_)) => Err(anyhow!("Operands must be two numbers or two strings")),
+            (_, Add | Sub | Mul | Div | Pow, _) => Err(anyhow!("Operands must be numbers")),
+            (_, Eq | NEq | LEq | GEq | L | G, _) => Err(anyhow!("Operands must be numbers")),
         }
     }
 }
