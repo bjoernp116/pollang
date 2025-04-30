@@ -75,6 +75,8 @@ impl UnaryOperator {
         match (self, lit.clone()) {
             (Neg, Number(n)) => Ok(Number(-n)),
             (Not, Boolean(n)) => Ok(Boolean(!n)),
+            (Not, Nil) => Ok(Boolean(true)),
+            (Not, _) => Ok(Boolean(false)),
             _ => Err(anyhow!("cant calculate {} {}", self, lit.clone()))
         }
     }
