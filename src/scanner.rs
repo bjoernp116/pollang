@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum TokenType {
     LeftParen,
     RightParen,

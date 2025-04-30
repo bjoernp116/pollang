@@ -98,9 +98,10 @@ fn main() -> anyhow::Result<()> {
             }*/
 
             let mut ast = AstFactory::new(tokens);
-            let head = ast.parse()?;
-
-            println!("{}", head);
+            let head = match ast.parse() {
+                Ok(h) => println!("{}", h),
+                Err(e) => println!("{}", e)
+            };
 
             exit_code.exit();
         }

@@ -232,10 +232,10 @@ impl AstFactory {
         self.current += 1;
         open_p += 1;
         while self.current < self.tokens.len() && open_p != 0 {
-            match self.tokens[self.current].token_type {
+            match self.tokens[self.current].token_type.clone() {
                 TokenType::LeftParen => open_p += 1,
                 TokenType::RightParen => open_p -= 1,
-                _ => ()
+                _x => ()//println!("{:?}", x)
             }
             private_tokens.push_back(self.tokens[self.current].clone());
             self.current += 1;
@@ -277,7 +277,9 @@ impl AstFactory {
                 self.current += 1;
                 Ok(Node::Litteral(Litteral::String(s.clone())))
             }
-            _ => Err(anyhow!("The token {} is not a number!", &self.tokens[self.current]))
+            _ => {
+                Err(anyhow!("[line {}] Error at '{}': Expect expression.", &self.tokens[self.current].line, &self.tokens[self.current].raw))
+            }
         }
     }
 
