@@ -141,7 +141,7 @@ fn main() -> anyhow::Result<()> {
                         },
                         Err(e) => {
                             eprintln!("{}", e);
-                            exit_code = ExitCode::Error(65);
+                            exit_code = ExitCode::Error(70);
                             exit_code.exit();
                         }
                     }
