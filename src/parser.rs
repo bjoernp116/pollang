@@ -31,7 +31,7 @@ pub enum Litteral {
 impl Display for Litteral {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Litteral::Number(n) => write!(f, "{:?}", n),
+            Litteral::Number(n) => write!(f, "{}", n),
             Litteral::Boolean(b) => write!(f, "{}", b),
             Litteral::Nil => write!(f, "nil"),
             Litteral::String(s) => write!(f, "{}", s),
