@@ -62,6 +62,7 @@ impl BinaryOperator {
 
             (Boolean(l), Eq, Boolean(r)) => Ok(Boolean(l == r)),
             (Boolean(l), NEq, Boolean(r)) => Ok(Boolean(l != r)),
+            (_, Eq | NEq | LEq | GEq | L | G, _) => Ok(Boolean(false)),
 
             _ => Err(anyhow!("cant calculate {} {} {}", left.clone(), self, right.clone()))
         }
