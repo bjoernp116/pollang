@@ -63,8 +63,8 @@ impl BinaryOperator {
             (Boolean(l), Eq, Boolean(r)) => Ok(Boolean(l == r)),
             (Boolean(l), NEq, Boolean(r)) => Ok(Boolean(l != r)),
 
-            (String(l), Eq, Number(r)) => Ok(Boolean(l == format!("{}", r))),
-            (Number(l), Eq, String(r)) => Ok(Boolean(r == format!("{}", l))),
+            (String(_), Eq, Number(_)) => Ok(Boolean(false)),
+            (Number(_), Eq, String(_)) => Ok(Boolean(false)),
 
             (String(_), Add, Number(_)) |
             (Number(_), Add, String(_)) => Err(anyhow!("Operands must be two numbers or two strings")),
