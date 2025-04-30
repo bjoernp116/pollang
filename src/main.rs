@@ -100,7 +100,7 @@ fn main() -> anyhow::Result<()> {
             let mut ast = AstFactory::new(tokens);
             let head = match ast.parse() {
                 Ok(h) => println!("{}", h),
-                Err(e) => println!("{}", e)
+                Err(e) => eprintln!("{}", e)
             };
 
             exit_code.exit();
