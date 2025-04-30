@@ -83,7 +83,7 @@ fn main() -> anyhow::Result<()> {
             let tokens: Vec<Token> = scanner::scan(file_contents)?;
             // You can use print statements as follows for debugging, they'll be visible when running tests.
             //
-            let exit_code = if tokens.iter().any(|t| !t.is_valid()) {
+            let mut exit_code = if tokens.iter().any(|t| !t.is_valid()) {
                 ExitCode::Error(65)
             } else {
                 ExitCode::Success
@@ -100,7 +100,10 @@ fn main() -> anyhow::Result<()> {
             let mut ast = AstFactory::new(tokens);
             let head = match ast.parse() {
                 Ok(h) => println!("{}", h),
-                Err(e) => eprintln!("{}", e)
+                Err(e) => {
+                    eprintln!("{}", e);
+                    exit_code = ExitCode::Error(65);
+                }
             };
 
             exit_code.exit();
