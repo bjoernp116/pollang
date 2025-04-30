@@ -1,9 +1,7 @@
-use std::{collections::VecDeque, fmt::{write, Display}};
+use std::{collections::VecDeque, fmt::Display};
 
 use crate::scanner::{Token, TokenType};
 use anyhow::anyhow;
-
-
 
 #[derive(Clone)]
 pub enum Node {
@@ -18,7 +16,7 @@ pub enum Node {
     },*/
     Parenthesis(Box<Node>),
     Unary(UnaryOperator, Box<Node>),
-    Litteral(Litteral)
+    Litteral(Litteral),
 }
 
 #[derive(Clone)]
@@ -28,6 +26,22 @@ pub enum Litteral {
     Nil,
     String(String),
 }
+
+pub enum Statement {
+    Expression(Node),
+    Print(Node),
+}
+
+impl Display for Statement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Statement::Print(t) => write!(f, "print: {}", t)?,
+            Statement::Expression(e) => write!(f, "expr: {}", e)?,
+        }
+        Ok(())
+    }
+}
+
 impl Display for Litteral {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -60,7 +74,7 @@ impl Display for UnaryOperator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Not => write!(f, "!"),
-            Self::Neg => write!(f, "-")
+            Self::Neg => write!(f, "-"),
         }
     }
 }
@@ -103,15 +117,41 @@ impl Display for BinaryOperator {
 pub struct AstFactory {
     //head: Node,
     current: usize,
-    tokens: VecDeque<Token>
+    tokens: VecDeque<Token>,
 }
 
 impl AstFactory {
-
     pub fn new(input: Vec<Token>) -> Self {
         Self {
             current: 0,
-            tokens: input.into()
+            tokens: input.into(),
+        }
+    }
+    pub fn parse_statements(&mut self) -> anyhow::Result<Vec<Statement>> {
+        let mut out: Vec<Statement> = Vec::new();
+        while self.current < self.tokens.len() {
+            let node = self.parse_statement()?;
+            match self.tokens[self.current].token_type {
+                TokenType::SemiColon => {
+                    self.current += 1;
+                }
+                _ => (),
+            }
+            out.push(node);
+        }
+        Ok(out)
+    }
+    pub fn parse_statement(&mut self) -> anyhow::Result<Statement> {
+        match self.tokens[self.current].token_type {
+            TokenType::Print => {
+                self.current += 1;
+                let value = self.parse_equality()?;
+                Ok(Statement::Print(value))
+            },
+            _ => {
+                let value = self.parse_equality()?;
+                Ok(Statement::Expression(value))
+            }
         }
     }
     pub fn parse(&mut self) -> anyhow::Result<Node> {
@@ -122,12 +162,12 @@ impl AstFactory {
         let mut node: Node = self.parse_term()?;
         while self.current < self.tokens.len() {
             match self.tokens[self.current].token_type {
-                TokenType::EqualEqual |
-                TokenType::GreaterEqual |
-                TokenType::LessEqual |
-                TokenType::BangEqual |
-                TokenType::Greater |
-                TokenType::Less => {
+                TokenType::EqualEqual
+                | TokenType::GreaterEqual
+                | TokenType::LessEqual
+                | TokenType::BangEqual
+                | TokenType::Greater
+                | TokenType::Less => {
                     let op = self.tokens[self.current].clone();
                     self.current += 1;
                     if self.current >= self.tokens.len() {
@@ -137,10 +177,10 @@ impl AstFactory {
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
-                        operator: op.try_into()?
+                        operator: op.try_into()?,
                     };
-                },
-                _ => break
+                }
+                _ => break,
             }
         }
         Ok(node)
@@ -160,10 +200,10 @@ impl AstFactory {
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
-                        operator: op.try_into()?
+                        operator: op.try_into()?,
                     };
-                },
-                _ => break
+                }
+                _ => break,
             }
         }
         Ok(node)
@@ -183,10 +223,10 @@ impl AstFactory {
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
-                        operator: op.try_into()?
+                        operator: op.try_into()?,
                     };
-                },
-                _ => break
+                }
+                _ => break,
             }
         }
         Ok(node)
@@ -206,10 +246,10 @@ impl AstFactory {
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
-                        operator: op.try_into()?
+                        operator: op.try_into()?,
                     };
-                },
-                _ => break
+                }
+                _ => break,
             }
         }
         Ok(node)
@@ -222,7 +262,7 @@ impl AstFactory {
         match self.tokens[self.current].token_type {
             TokenType::LeftParen => self.parse_paren(),
             TokenType::Bang | TokenType::Minus => self.parse_unary(),
-            _ => self.parse_number()
+            _ => self.parse_number(),
         }
     }
 
@@ -242,8 +282,10 @@ impl AstFactory {
             return Ok(Node::Litteral(Litteral::Number(0.)));
         }
         match self.tokens[self.current].token_type {
-            TokenType::LeftParen => {},
-            _ => { return self.parse_number(); }
+            TokenType::LeftParen => {}
+            _ => {
+                return self.parse_number();
+            }
         };
         self.current += 1;
         open_p += 1;
@@ -251,7 +293,7 @@ impl AstFactory {
             match self.tokens[self.current].token_type.clone() {
                 TokenType::LeftParen => open_p += 1,
                 TokenType::RightParen => open_p -= 1,
-                _x => ()//println!("{:?}", x)
+                _x => (), //println!("{:?}", x)
             }
             private_tokens.push_back(self.tokens[self.current].clone());
             self.current += 1;
@@ -276,29 +318,30 @@ impl AstFactory {
                 let number = *x;
                 self.current += 1;
                 Ok(Node::Litteral(Litteral::Number(number as f64)))
-            },
+            }
             TokenType::True => {
                 self.current += 1;
                 Ok(Node::Litteral(Litteral::Boolean(true)))
-            },
+            }
             TokenType::False => {
                 self.current += 1;
                 Ok(Node::Litteral(Litteral::Boolean(false)))
-            },
+            }
             TokenType::Nil => {
                 self.current += 1;
                 Ok(Node::Litteral(Litteral::Nil))
-            },
+            }
             TokenType::StringLitteral(s) => {
                 self.current += 1;
                 Ok(Node::Litteral(Litteral::String(s.clone())))
             }
-            _ => {
-                Err(anyhow!("[line {}] Error at '{}': Expect expression.", &self.tokens[self.current].line, &self.tokens[self.current].raw))
-            }
+            _ => Err(anyhow!(
+                "[line {}] Error at '{}': Expect expression.",
+                &self.tokens[self.current].line,
+                &self.tokens[self.current].raw
+            )),
         }
     }
-
 }
 
 impl TryFrom<Token> for BinaryOperator {
@@ -316,7 +359,7 @@ impl TryFrom<Token> for BinaryOperator {
             TokenType::BangEqual => Ok(BinaryOperator::NEq),
             TokenType::Less => Ok(BinaryOperator::L),
             TokenType::Greater => Ok(BinaryOperator::G),
-            _ => Err(anyhow!("Cant convert Token {} to operator", token))
+            _ => Err(anyhow!("Cant convert Token {} to operator", token)),
         }
     }
 }
@@ -327,7 +370,7 @@ impl TryFrom<Token> for UnaryOperator {
         match token.token_type {
             TokenType::Bang => Ok(UnaryOperator::Not),
             TokenType::Minus => Ok(UnaryOperator::Neg),
-            _ => Err(anyhow!("Cant convert Token {} to operator", token))
+            _ => Err(anyhow!("Cant convert Token {} to operator", token)),
         }
     }
 }
@@ -337,8 +380,12 @@ impl Display for Node {
         match self {
             Node::Unary(op, e) => write!(f, "({} {})", op, e),
             Node::Litteral(l) => write!(f, "{}", l),
-            Node::Binary { left, right, operator } => write!(f, "({} {} {})", operator, left, right),
-            Node::Parenthesis(e) => write!(f, "(group {})", e)
+            Node::Binary {
+                left,
+                right,
+                operator,
+            } => write!(f, "({} {} {})", operator, left, right),
+            Node::Parenthesis(e) => write!(f, "(group {})", e),
         }
     }
 }
@@ -348,8 +395,12 @@ impl std::fmt::Debug for Node {
         match self {
             Node::Unary(op, e) => write!(f, "({} {:?})", op, e),
             Node::Litteral(l) => write!(f, "{:?}", l),
-            Node::Binary { left, right, operator } => write!(f, "({} {:?} {:?})", operator, left, right),
-            Node::Parenthesis(e) => write!(f, "(group {:?})", e)
+            Node::Binary {
+                left,
+                right,
+                operator,
+            } => write!(f, "({} {:?} {:?})", operator, left, right),
+            Node::Parenthesis(e) => write!(f, "(group {:?})", e),
         }
     }
 }

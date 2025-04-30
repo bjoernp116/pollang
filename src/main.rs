@@ -6,9 +6,9 @@ use clap::{Parser, ValueEnum};
 use anyhow::anyhow;
 use parser::AstFactory;
 use scanner::{Token, TokenType};
-mod scanner;
-mod parser;
 mod interpreter;
+mod parser;
+mod scanner;
 
 #[derive(Parser, Debug)]
 #[command(version, long_about = None)]
@@ -28,6 +28,8 @@ enum Command {
     Parse,
     #[clap(name = "evaluate", alias = "e")]
     Evaluate,
+    #[clap(name = "run", alias = "r")]
+    Run,
 }
 
 enum ExitCode {
@@ -81,7 +83,7 @@ fn main() -> anyhow::Result<()> {
 
             println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
             exit_code.exit();
-        },
+        }
         Command::Parse => {
             let tokens: Vec<Token> = scanner::scan(file_contents)?;
             // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -101,7 +103,7 @@ fn main() -> anyhow::Result<()> {
             }*/
 
             let mut ast = AstFactory::new(tokens);
-            let head = match ast.parse() {
+            match ast.parse() {
                 Ok(h) => println!("{:?}", h),
                 Err(e) => {
                     eprintln!("{}", e);
@@ -110,7 +112,7 @@ fn main() -> anyhow::Result<()> {
             };
 
             exit_code.exit();
-        },
+        }
         Command::Evaluate => {
             let tokens: Vec<Token> = scanner::scan(file_contents)?;
             // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -138,14 +140,61 @@ fn main() -> anyhow::Result<()> {
                         Ok(res) => {
                             println!("{}", res);
                             exit_code.exit();
-                        },
+                        }
                         Err(e) => {
                             eprintln!("{}", e);
                             exit_code = ExitCode::Error(70);
                             exit_code.exit();
                         }
                     }
-                },
+                }
+                Err(e) => {
+                    eprintln!("{}", e);
+                    exit_code = ExitCode::Error(65);
+                    exit_code.exit();
+                }
+            };
+        }
+        Command::Run => {
+            let tokens: Vec<Token> = scanner::scan(file_contents)?;
+            // You can use print statements as follows for debugging, they'll be visible when running tests.
+            //
+            let mut exit_code = if tokens.iter().any(|t| !t.is_valid()) {
+                ExitCode::Error(65)
+            } else {
+                ExitCode::Success
+            };
+
+
+            // for token in tokens.clone() {
+            //     if let TokenType::Invalid(e) = token.token_type {
+            //         eprintln!("[line {}] Error: {}", token.line, e);
+            //     } else {
+            //         println!("{}", token);
+            //     }
+            // }
+
+            let mut ast = AstFactory::new(tokens);
+            let head = ast.parse_statements();
+            match head {
+                Ok(statements) => {
+                    for mut statement in statements {
+                        statement.execute();
+                    } 
+
+                    /*let res = h.evaluate();
+                    match res {
+                        Ok(res) => {
+                            println!("{}", res);
+                            exit_code.exit();
+                        }
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            exit_code = ExitCode::Error(70);
+                            exit_code.exit();
+                        }
+                    }*/
+                }
                 Err(e) => {
                     eprintln!("{}", e);
                     exit_code = ExitCode::Error(65);

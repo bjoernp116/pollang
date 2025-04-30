@@ -1,8 +1,22 @@
 
-use crate::parser::{BinaryOperator, Litteral, Node, UnaryOperator};
+use crate::parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator};
 use anyhow::anyhow;
 
 
+impl Statement {
+    pub fn execute(&mut self) -> anyhow::Result<()> {
+        match self {
+            Self::Expression(expr) => {
+                expr.evaluate();
+            },
+            Self::Print(expr) => {
+                println!("{}", expr);
+            }
+
+        }
+        Ok(())
+    } 
+}
 
 impl Node {
     pub fn evaluate(&mut self) -> anyhow::Result<Node> {
@@ -85,7 +99,6 @@ impl UnaryOperator {
             (Not, Nil) => Ok(Boolean(true)),
             (Not, _) => Ok(Boolean(false)),
             (Neg, _) => Err(anyhow!("Operand must be a number")),
-            _ => Err(anyhow!("cant calculate {} {}", self, lit.clone()))
         }
     }
 }
