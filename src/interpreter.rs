@@ -58,6 +58,7 @@ impl BinaryOperator {
 
             (String(l), Eq, String(r)) => Ok(Boolean(l == r)),
             (String(l), NEq, String(r)) => Ok(Boolean(l != r)),
+            (String(l), Add, String(r)) => Ok(String(format!("{}{}", l, r))),
 
             (Boolean(l), Eq, Boolean(r)) => Ok(Boolean(l == r)),
             (Boolean(l), NEq, Boolean(r)) => Ok(Boolean(l != r)),
