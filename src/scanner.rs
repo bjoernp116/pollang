@@ -56,117 +56,112 @@ pub struct Token {
 pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
     let mut out = Vec::new();
     let mut buffer: String = String::new();
-    for (line_number, line) in str.lines().enumerate() {
-        let line_number = line_number + 1;
-        let line: Vec<char> = line.chars().collect();
-        let mut i = 0;
-        while i < line.len() {
-            match line[i] {
-                ' ' | '\n' | '\t' => {},
-                x if x.is_numeric() => {
-                    let mut float = false;
-                    loop {
-                        if i != line.len() && line[i] == '.' && !float {
-                            float = true;
-                            buffer.push('.');
-                            i+=1;
-                            continue;
-                        }
-                        if i == line.len() || !line[i].is_numeric() {
-
-                            let number = buffer.clone().parse::<f64>()?;
-                            let token = Token {
-                                token_type: TokenType::Number(number),
-                                raw: buffer.clone(),
-                                line: line_number
-                            };
-                            buffer.clear();
-                            i -= 1;
-                            out.push(token);
-                            break;
-                        }
-                        buffer.push(line[i]);
-                        i += 1;
+    let mut line_number = 1;
+    let stream: Vec<char> = str.chars().collect();
+    let mut i = 0;
+    while i < stream.len() {
+        match stream[i] {
+            ' ' | '\t' => {},
+            '\n' => line_number += 1,
+            x if x.is_numeric() => {
+                let mut float = false;
+                loop {
+                    if i != stream.len() && stream[i] == '.' && !float {
+                        float = true;
+                        buffer.push('.');
+                        i+=1;
+                        continue;
                     }
-                }
-                '"' => {
+                    if i == stream.len() || !stream[i].is_numeric() {
+
+                        let number = buffer.clone().parse::<f64>()?;
+                        let token = Token {
+                            token_type: TokenType::Number(number),
+                            raw: buffer.clone(),
+                            line: line_number
+                        };
+                        buffer.clear();
+                        i -= 1;
+                        out.push(token);
+                        break;
+                    }
+                    buffer.push(stream[i]);
                     i += 1;
-                    loop {
-                        if i == line.len() {
-                            let token = Token {
-                                token_type: TokenType::Invalid(format!("Unterminated string.")),
-                                raw: buffer.clone(),
-                                line: line_number
-                            };
-                            out.push(token);
-                            break;
-                        }
-
-                        //println!("{}/{}, {}", i, line.len(), line[i]);
-
-
-                        if line[i] == '"' {
-                            let token = Token {
-                                token_type: TokenType::StringLitteral(buffer.clone()),
-                                raw: format!("\"{}\"", buffer.clone()),
-                                line: line_number
-                            };
-                            buffer.clear();
-                            out.push(token);
-                            break;
-                        }
-                        buffer.push(line[i]);
-                        i += 1;
-                    }
-                }
-                '=' | '!' | '<' | '>' if i+1 < line.len() && line[i+1] == '=' => {
-                    let token_type = match line[i] {
-                        '=' => TokenType::EqualEqual,
-                        '!' => TokenType::BangEqual,
-                        '>' => TokenType::GreaterEqual,
-                        '<' => TokenType::LessEqual,
-                        _ => unreachable!()
-                    };
-                    let token = Token {
-                        token_type,
-                        raw: format!("{}{}", line[i], line[i+1]),
-                        line: line_number
-                    };
-                    out.push(token);
-                    i += 1;
-                }
-                '/' if i+1 < line.len() && line[i+1] == '/' => {
-                    break;
-                }
-                c if c.is_alphabetic() || c == '_' => {
-                    loop {
-                        if i == line.len()
-                        || !(line[i].is_alphanumeric() || line[i] == '_') {
-                            let token = Token {
-                                token_type: TokenType::from(buffer.clone()),
-                                raw: buffer.clone(),
-                                line: line_number
-                            };
-                            buffer.clear();
-                            out.push(token);
-                            i -= 1;
-                            break;
-                        }
-                        buffer.push(line[i]);
-                        i += 1;
-                    }
-                }
-                _ => {
-                    let token = Token {
-                        token_type: TokenType::from(line[i]),
-                        raw: format!("{}", line[i]),
-                        line: line_number
-                    };
-                    out.push(token);
                 }
             }
-            i += 1;
+            '"' => {
+                i += 1;
+                loop {
+                    if i == stream.len() {
+                        let token = Token {
+                            token_type: TokenType::Invalid(format!("Unterminated string.")),
+                            raw: buffer.clone(),
+                            line: line_number
+                        };
+                        out.push(token);
+                        break;
+                    }
+                    if stream[i] == '"' {
+                        let token = Token {
+                            token_type: TokenType::StringLitteral(buffer.clone()),
+                            raw: format!("\"{}\"", buffer.clone()),
+                            line: line_number
+                        };
+                        buffer.clear();
+                        out.push(token);
+                        break;
+                    }
+                    buffer.push(stream[i]);
+                    i += 1;
+                }
+            }
+            '=' | '!' | '<' | '>' if i+1 < stream.len() && stream[i+1] == '=' => {
+                let token_type = match stream[i] {
+                    '=' => TokenType::EqualEqual,
+                    '!' => TokenType::BangEqual,
+                    '>' => TokenType::GreaterEqual,
+                    '<' => TokenType::LessEqual,
+                    _ => unreachable!()
+                };
+                let token = Token {
+                    token_type,
+                    raw: format!("{}{}", stream[i], stream[i+1]),
+                    line: line_number
+                };
+                out.push(token);
+                i += 1;
+            }
+            '/' if i+1 < stream.len() && stream[i+1] == '/' => {
+                break;
+            }
+            c if c.is_alphabetic() || c == '_' => {
+                loop {
+                    if i == stream.len()
+                    || !(stream[i].is_alphanumeric() || stream[i] == '_') {
+                        let token = Token {
+                            token_type: TokenType::from(buffer.clone()),
+                            raw: buffer.clone(),
+                            line: line_number
+                        };
+                        buffer.clear();
+                        out.push(token);
+                        i -= 1;
+                        break;
+                    }
+                    buffer.push(stream[i]);
+                    i += 1;
+                }
+            }
+            _ => {
+                let token = Token {
+                    token_type: TokenType::from(stream[i]),
+                    raw: format!("{}", stream[i]),
+                    line: line_number
+                };
+                out.push(token);
+            }
         }
+        i += 1;
     }
     Ok(out)
 }
