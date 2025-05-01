@@ -1,3 +1,3 @@
-print "bar" + "baz" + "quz";
-print 15 - 62;
-print "quz" == "world";
+print "hello" + "bar" + "foo";
+print 62 - 18;
+print "foo" == "baz";

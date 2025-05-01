@@ -179,9 +179,9 @@ fn main() -> anyhow::Result<()> {
             match head {
                 Ok(statements) => {
                     for mut statement in statements {
-                        statement.execute();
+                        statement.execute()?;
                     } 
-
+                    exit_code.exit();
                     /*let res = h.evaluate();
                     match res {
                         Ok(res) => {
