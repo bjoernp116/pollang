@@ -1,2 +1,3 @@
-"te
-st"
+print "bar" + "baz" + "quz";
+print 15 - 62;
+print "quz" == "world";
