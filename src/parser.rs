@@ -337,7 +337,7 @@ impl AstFactory {
             }
             _ => Err(anyhow!(
                 "[line {}] Error at '{}': Expect expression.",
-                &self.tokens[self.current].line,
+                &self.tokens[self.current].position.line(),
                 &self.tokens[self.current].raw
             )),
         }
