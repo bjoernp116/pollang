@@ -32,8 +32,13 @@ impl Node {
                 let right = right.evaluate(enviornment)?;
 
                 if let (Node::Litteral(l, _), Node::Litteral(r, _)) = (left, right) {
-                    let lit = operator.eval(l, r)?;
-                    Ok(Node::Litteral(lit, position.clone()))
+                    match operator.eval(l, r) {
+                        Ok(lit) => Ok(Node::Litteral(lit, position.clone())),
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            std::process::exit(70);
+                        }
+                    }
                 } else {
                     unreachable!();
                 }
