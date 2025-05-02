@@ -136,8 +136,12 @@ impl AstFactory {
         let mut out: Vec<Statement> = Vec::new();
         while self.current < self.tokens.len() {
             let node = self.parse_statement()?;
-            match self.tokens[self.current].token_type {
-                TokenType::SemiColon => {
+            match self.tokens.get(self.current) {
+                Some(Token {
+                    position,
+                    raw,
+                    token_type: TokenType::SemiColon
+                })=> {
                     self.current += 1;
                 }
                 _ => (),

@@ -1,4 +1,1 @@
-// This program tests that the + operator is only supported when both operands are numbers or both are strings
-print "the expression below is invalid";
-21 + "hello";
-print "this should not be printed";
+"quz" < true
