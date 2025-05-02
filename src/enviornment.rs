@@ -20,7 +20,7 @@ impl Enviornment {
         if let Some(var) = self.variables.get(ident) {
             Ok(var.clone())
         } else {
-            Err(anyhow!("Cant find variable"))
+            Err(anyhow!("Undefined variable '{}'.", ident))
         }
     }
     pub fn run(&mut self) -> anyhow::Result<()> {

@@ -64,7 +64,13 @@ impl Node {
                 Ok(Self::Litteral(lit.clone(), pos.clone()))
             },
             Self::Identifier(i, pos) => {
-                Ok(Self::Litteral(enviornment.get(i)?, pos.clone()))
+                match enviornment.get(i) {
+                    Ok(v) => Ok(Self::Litteral(v, pos.clone())),
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        std::process::exit(70);
+                    }
+                }
             }
         }
     }
