@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use crate::position::Position;
+
 #[derive(Clone, Debug)]
 #[allow(unused)]
 pub enum TokenType {
@@ -51,21 +53,27 @@ pub enum TokenType {
 pub struct Token {
     pub token_type: TokenType,
     pub raw: String,
-    pub line: usize
+    pub position: Position,
 }
 
 pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
     let mut out = Vec::new();
     let mut buffer: String = String::new();
     let mut line_number = 1;
+    let mut new_line = 0;
     let stream: Vec<char> = str.chars().collect();
     let mut i = 0;
     while i < stream.len() {
         match stream[i] {
             ' ' | '\t' => {},
-            '\n' => line_number += 1,
+            '\n' => {
+                line_number += 1;
+                new_line = i;
+            },
             x if x.is_numeric() => {
                 let mut float = false;
+                let first_line = line_number;
+                let first_col = i - new_line;
                 loop {
                     if i != stream.len() && stream[i] == '.' && !float {
                         float = true;
@@ -79,7 +87,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                         let token = Token {
                             token_type: TokenType::Number(number),
                             raw: buffer.clone(),
-                            line: line_number
+                            position: Position::new(first_line, first_col, line_number, i - new_line),
                         };
                         buffer.clear();
                         i -= 1;
@@ -92,12 +100,19 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
             }
             '"' => {
                 i += 1;
+                let first_line = line_number;
+                let first_col = i - new_line;
                 loop {
                     if i == stream.len() {
                         let token = Token {
                             token_type: TokenType::Invalid(format!("Unterminated string.")),
                             raw: buffer.clone(),
-                            line: line_number
+                            position: Position::new(
+                                first_line, 
+                                first_col, 
+                                line_number, 
+                                i - new_line
+                            ),
                         };
                         out.push(token);
                         break;
@@ -106,13 +121,22 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                         let token = Token {
                             token_type: TokenType::StringLitteral(buffer.clone()),
                             raw: format!("\"{}\"", buffer.clone()),
-                            line: line_number
+                            position: Position::new(
+                                first_line, 
+                                first_col, 
+                                line_number, 
+                                i - new_line
+                            ),
                         };
                         buffer.clear();
                         out.push(token);
                         break;
                     }
                     buffer.push(stream[i]);
+                    if stream[i] == '\n' {
+                        line_number += 1;
+                        new_line = i;
+                    }
                     i += 1;
                 }
             }
@@ -127,7 +151,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 let token = Token {
                     token_type,
                     raw: format!("{}{}", stream[i], stream[i+1]),
-                    line: line_number
+                    position: Position::new(line_number, i, line_number, i+1),
                 };
                 out.push(token);
                 i += 1;
@@ -142,13 +166,14 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 }
             }
             c if c.is_alphabetic() || c == '_' => {
+                let first_col = i - new_line;
                 loop {
                     if i == stream.len()
                     || !(stream[i].is_alphanumeric() || stream[i] == '_') {
                         let token = Token {
                             token_type: TokenType::from(buffer.clone()),
                             raw: buffer.clone(),
-                            line: line_number
+                            position: Position::new(line_number, first_col, line_number, i - new_line)
                         };
                         buffer.clear();
                         out.push(token);
@@ -163,7 +188,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 let token = Token {
                     token_type: TokenType::from(stream[i]),
                     raw: format!("{}", stream[i]),
-                    line: line_number
+                    position: Position::new(line_number, i - new_line, line_number, i - new_line)
                 };
                 out.push(token);
             }
@@ -178,7 +203,7 @@ impl Display for Token {
         use TokenType::*;
         let str: &str = match self.token_type.clone() {
             Invalid(err) => {
-                eprint!("[line {}]: Error: {}", self.line, err);
+                eprint!("[line {}]: Error: {}", self.position.line(), err);
                 return Ok(());
             },
             LeftParen => "LEFT_PAREN",

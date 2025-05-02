@@ -9,6 +9,7 @@ use scanner::{Token, TokenType};
 mod interpreter;
 mod parser;
 mod scanner;
+mod position;
 
 #[derive(Parser, Debug)]
 #[command(version, long_about = None)]
@@ -75,7 +76,7 @@ fn main() -> anyhow::Result<()> {
 
             for token in tokens {
                 if let TokenType::Invalid(e) = token.token_type {
-                    eprintln!("[line {}] Error: {}", token.line, e);
+                    eprintln!("[line {}] Error: {}", token.position.line(), e);
                 } else {
                     println!("{}", token);
                 }
@@ -165,7 +166,6 @@ fn main() -> anyhow::Result<()> {
                 ExitCode::Success
             };
 
-
             // for token in tokens.clone() {
             //     if let TokenType::Invalid(e) = token.token_type {
             //         eprintln!("[line {}] Error: {}", token.line, e);
@@ -179,8 +179,14 @@ fn main() -> anyhow::Result<()> {
             match head {
                 Ok(statements) => {
                     for mut statement in statements {
-                        statement.execute()?;
-                    } 
+                        match statement.execute() {
+                            Ok(_) => (),
+                            Err(e) => {
+                                eprintln!("{}", e);
+                                ExitCode::Error(70).exit();
+                            }
+                        }
+                    }
                     exit_code.exit();
                     /*let res = h.evaluate();
                     match res {

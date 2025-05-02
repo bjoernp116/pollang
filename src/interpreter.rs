@@ -22,13 +22,13 @@ impl Statement {
 impl Node {
     pub fn evaluate(&mut self) -> anyhow::Result<Node> {
         match self {
-            Self::Binary { left, right, operator } => {
+            Self::Binary { left, right, operator, position } => {
                 let left = left.evaluate()?;
                 let right = right.evaluate()?;
 
-                if let (Node::Litteral(l), Node::Litteral(r)) = (left, right) {
+                if let (Node::Litteral(l, _), Node::Litteral(r, _)) = (left, right) {
                     let lit = operator.eval(l, r)?;
-                    Ok(Node::Litteral(lit))
+                    Ok(Node::Litteral(lit, position.clone()))
                 } else {
                     unreachable!();
                 }
@@ -36,17 +36,17 @@ impl Node {
             Self::Parenthesis(node) => {
                 node.evaluate()
             },
-            Self::Unary(op, node) => {
+            Self::Unary(op, node, pos) => {
                 let node = node.evaluate()?;
-                if let Node::Litteral(l) = node {
+                if let Node::Litteral(l, _) = node {
                     let lit = op.eval(l)?;
-                    Ok(Node::Litteral(lit))
+                    Ok(Node::Litteral(lit, pos.clone()))
                 } else {
                     unreachable!();
                 }
             },
-            Self::Litteral(lit) => {
-                Ok(Self::Litteral(lit.clone()))
+            Self::Litteral(lit, pos) => {
+                Ok(Self::Litteral(lit.clone(), pos.clone()))
             }
         }
     }

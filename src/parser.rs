@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, fmt::Display};
 
-use crate::scanner::{Token, TokenType};
+use crate::{position::Position, scanner::{Token, TokenType}};
 use anyhow::anyhow;
 
 #[derive(Clone)]
@@ -9,14 +9,15 @@ pub enum Node {
         left: Box<Node>,
         right: Box<Node>,
         operator: BinaryOperator,
+        position: Position,
     },
     /*Parenthesis {
         left: Box<Node>,
         right: Box<Node>,
     },*/
     Parenthesis(Box<Node>),
-    Unary(UnaryOperator, Box<Node>),
-    Litteral(Litteral),
+    Unary(UnaryOperator, Box<Node>, Position),
+    Litteral(Litteral, Position),
 }
 
 #[derive(Clone)]
@@ -174,10 +175,12 @@ impl AstFactory {
                         break;
                     }
                     let right = Box::new(self.parse_term()?);
+                    let position = Position::range(node.position(), right.position());
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
                         operator: op.try_into()?,
+                        position
                     };
                 }
                 _ => break,
@@ -197,10 +200,12 @@ impl AstFactory {
                         break;
                     }
                     let right = Box::new(self.parse_factor()?);
+                    let position = Position::range(node.position(), right.position());
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
                         operator: op.try_into()?,
+                        position
                     };
                 }
                 _ => break,
@@ -220,10 +225,12 @@ impl AstFactory {
                         break;
                     }
                     let right = Box::new(self.parse_exponent()?);
+                    let position = Position::range(node.position(), right.position());
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
                         operator: op.try_into()?,
+                        position,
                     };
                 }
                 _ => break,
@@ -243,10 +250,12 @@ impl AstFactory {
                         break;
                     }
                     let right = Box::new(self.parse_primary()?);
+                    let position = Position::range(node.position(), right.position());
                     node = Node::Binary {
                         left: Box::new(node),
                         right,
                         operator: op.try_into()?,
+                        position
                     };
                 }
                 _ => break,
@@ -270,7 +279,8 @@ impl AstFactory {
         let op = self.tokens[self.current].clone();
         self.current += 1;
         let node: Node = self.parse_primary()?;
-        let unary = Node::Unary(op.try_into()?, Box::new(node));
+        let position = Position::range(op.clone().position, node.position());
+        let unary = Node::Unary(op.try_into()?, Box::new(node), position);
         Ok(unary)
     }
 
@@ -278,9 +288,6 @@ impl AstFactory {
         let mut open_p = 0;
         let mut private_tokens: VecDeque<Token> = VecDeque::new();
 
-        if self.tokens.len() == 1 {
-            return Ok(Node::Litteral(Litteral::Number(0.)));
-        }
         match self.tokens[self.current].token_type {
             TokenType::LeftParen => {}
             _ => {
@@ -313,31 +320,32 @@ impl AstFactory {
         if self.current >= self.tokens.len() {
             return Err(anyhow!("Out of bounds access in parse_number"));
         }
+        let position = self.tokens[self.current].position.clone();
         match &self.tokens[self.current].token_type {
             TokenType::Number(x) => {
                 let number = *x;
                 self.current += 1;
-                Ok(Node::Litteral(Litteral::Number(number as f64)))
+                Ok(Node::Litteral(Litteral::Number(number as f64), position))
             }
             TokenType::True => {
                 self.current += 1;
-                Ok(Node::Litteral(Litteral::Boolean(true)))
+                Ok(Node::Litteral(Litteral::Boolean(true), position))
             }
             TokenType::False => {
                 self.current += 1;
-                Ok(Node::Litteral(Litteral::Boolean(false)))
+                Ok(Node::Litteral(Litteral::Boolean(false), position))
             }
             TokenType::Nil => {
                 self.current += 1;
-                Ok(Node::Litteral(Litteral::Nil))
+                Ok(Node::Litteral(Litteral::Nil, position))
             }
             TokenType::StringLitteral(s) => {
                 self.current += 1;
-                Ok(Node::Litteral(Litteral::String(s.clone())))
+                Ok(Node::Litteral(Litteral::String(s.clone()), position))
             }
             _ => Err(anyhow!(
                 "[line {}] Error at '{}': Expect expression.",
-                &self.tokens[self.current].line,
+                &self.tokens[self.current].position.line(),
                 &self.tokens[self.current].raw
             )),
         }
@@ -377,13 +385,15 @@ impl TryFrom<Token> for UnaryOperator {
 
 impl Display for Node {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        #![allow(unused)]
         match self {
-            Node::Unary(op, e) => write!(f, "({} {})", op, e),
-            Node::Litteral(l) => write!(f, "{}", l),
+            Node::Unary(op, e, _) => write!(f, "({} {})", op, e),
+            Node::Litteral(l, _) => write!(f, "{}", l),
             Node::Binary {
                 left,
                 right,
                 operator,
+                position,
             } => write!(f, "({} {} {})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {})", e),
         }
@@ -392,13 +402,15 @@ impl Display for Node {
 
 impl std::fmt::Debug for Node {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        #![allow(unused)]
         match self {
-            Node::Unary(op, e) => write!(f, "({} {:?})", op, e),
-            Node::Litteral(l) => write!(f, "{:?}", l),
+            Node::Unary(op, e, _) => write!(f, "({} {:?})", op, e),
+            Node::Litteral(l, _) => write!(f, "{:?}", l),
             Node::Binary {
                 left,
                 right,
                 operator,
+                position,
             } => write!(f, "({} {:?} {:?})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {:?})", e),
         }
