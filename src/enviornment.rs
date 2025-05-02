@@ -48,7 +48,13 @@ impl Enviornment {
 impl TryFrom<&mut AstFactory> for Enviornment {
     type Error = anyhow::Error;
     fn try_from(ast: &mut AstFactory) -> Result<Self, Self::Error> {
-        let statements: Vec<Statement> = ast.parse_statements()?;
+        let statements: Vec<Statement> = match ast.parse_statements() {
+            Ok(stmts) => stmts,
+            Err(e) => {
+                eprintln!("{}", e);
+                std::process::exit(65);
+            }
+        };
         let variables = HashMap::new();
         Ok(Self { statements, variables })
     }
