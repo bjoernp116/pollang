@@ -49,8 +49,13 @@ impl Node {
             Self::Unary(op, node, pos) => {
                 let node = node.evaluate(enviornment)?;
                 if let Node::Litteral(l, _) = node {
-                    let lit = op.eval(l)?;
-                    Ok(Node::Litteral(lit, pos.clone()))
+                    match op.eval(l) {
+                        Ok(lit) => Ok(Node::Litteral(lit, pos.clone())),
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            std::process::exit(70);
+                        }
+                    }
                 } else {
                     unreachable!();
                 }
