@@ -7,8 +7,8 @@ use crate::parser::{AstFactory, Litteral, Node, Statement};
 
 #[derive(Clone)]
 pub struct Enviornment {
-    variables: HashMap<String, Litteral>,
-    statements: Vec<Statement>
+    pub variables: HashMap<String, Litteral>,
+    pub statements: Vec<Statement>
 }
 
 impl Enviornment {

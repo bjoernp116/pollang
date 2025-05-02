@@ -1,11 +1,11 @@
-use std::fs;
+use std::{collections::HashMap, fs};
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 
 use anyhow::anyhow;
 use enviornment::Enviornment;
-use parser::AstFactory;
+use parser::{AstFactory, Statement};
 use scanner::{Token, TokenType};
 mod interpreter;
 mod parser;
@@ -135,7 +135,11 @@ fn main() -> anyhow::Result<()> {
             }*/
 
             let mut ast = AstFactory::new(tokens);
-            let mut enviornment: Enviornment = (&mut ast).try_into()?;
+            let statement = ast.parse()?;
+            let mut enviornment: Enviornment = Enviornment {
+                variables: HashMap::new(),
+                statements: vec![Statement::Print(statement)]
+            };
             enviornment.run();
             
         }
