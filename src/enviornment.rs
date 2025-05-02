@@ -27,6 +27,7 @@ impl Enviornment {
         for statement in self.statements.clone() {
             match statement {
                 Statement::Expression(expr) => {
+                    (&mut expr.clone()).evaluate(&mut self.clone())?;
                 },
                 Statement::Print(expr) => {
                     let expr = (&mut expr.clone()).evaluate(&mut self.clone())?;
