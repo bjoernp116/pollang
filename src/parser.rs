@@ -161,9 +161,23 @@ impl AstFactory {
                 self.current += 1;
                 let identifier = self.parse_number()?;
                 if let Node::Identifier(name, _) = identifier {
-                    self.current += 1;
-                    let expr = self.parse_equality()?;
-                    Ok(Statement::VarDecl(name, expr)) 
+                    match self.tokens[self.current].token_type {
+                        TokenType::SemiColon => {
+                            let pos = self.tokens[self.current].position.clone();
+                            let expr = Node::Litteral(Litteral::Nil, pos);
+                            self.current += 1;
+                            Ok(Statement::VarDecl(name, expr))
+                        },
+                        TokenType::Equal => {
+                            self.current += 1;
+                            let expr = self.parse_equality()?;
+                            Ok(Statement::VarDecl(name, expr)) 
+                        },
+                        _ => {
+                            eprintln!("Expected = or ; after variable declearation!");
+                            std::process::exit(70);
+                        }
+                    }
                 } else {
                     Err(anyhow!("Expected identifier got {}", identifier))
                 }
