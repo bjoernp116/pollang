@@ -1,7 +1,4 @@
-print true != true;
-
-print "36
-10
-78
-";
-print "There should be an empty line above this.";
+// This program prints the result of arithmetic operations involving strings and integers
+print "hello" + "foo" + "quz";
+print 43 - 82;
+print "quz" == "baz";

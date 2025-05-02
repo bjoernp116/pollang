@@ -133,7 +133,12 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
                 i += 1;
             }
             '/' if i+1 < stream.len() && stream[i+1] == '/' => {
-                break;
+                loop {
+                    if stream[i] == '\n' {
+                        break;
+                    }
+                    i += 1;
+                }
             }
             c if c.is_alphabetic() || c == '_' => {
                 loop {
