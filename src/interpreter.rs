@@ -1,22 +1,22 @@
 
-use crate::{enviornment::Enviornment, parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator}};
+use crate::{enviornment::{Enviornment, Variables}, parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator}};
 use anyhow::anyhow;
 
 
 impl Statement {
-    pub fn execute(&mut self, enviornment: &mut Enviornment) -> anyhow::Result<()> {
+    pub fn execute(&mut self, variables: &mut Variables) -> anyhow::Result<()> {
         match self {
             Self::Expression(expr) => {
-                expr.evaluate(enviornment)?;
+                expr.evaluate(variables)?;
             },
             Self::Print(expr) => {
-                let expr = expr.evaluate(enviornment)?;
+                let expr = expr.evaluate(variables)?;
                 println!("{}", expr);
             },
             Self::VarDecl(ident, expr) => {
-                let expr = expr.evaluate(enviornment)?;
+                let expr = expr.evaluate(variables)?;
                 if let Node::Litteral(lit, _) = expr {
-                    enviornment.define(ident.clone(), lit);
+                    variables.define(ident.clone(), lit);
                 }
             }
         }
@@ -25,11 +25,11 @@ impl Statement {
 }
 
 impl Node {
-    pub fn evaluate(&mut self, enviornment: &mut Enviornment) -> anyhow::Result<Node> {
+    pub fn evaluate(&mut self, variables: &mut Variables) -> anyhow::Result<Node> {
         match self {
             Self::Binary { left, right, operator, position } => {
-                let left = left.evaluate(enviornment)?;
-                let right = right.evaluate(enviornment)?;
+                let left = left.evaluate(variables)?;
+                let right = right.evaluate(variables)?;
 
                 if let (Node::Litteral(l, _), Node::Litteral(r, _)) = (left, right) {
                     match operator.eval(l, r) {
@@ -44,10 +44,10 @@ impl Node {
                 }
             },
             Self::Parenthesis(node) => {
-                node.evaluate(enviornment)
+                node.evaluate(variables)
             },
             Self::Unary(op, node, pos) => {
-                let node = node.evaluate(enviornment)?;
+                let node = node.evaluate(variables)?;
                 if let Node::Litteral(l, _) = node {
                     match op.eval(l) {
                         Ok(lit) => Ok(Node::Litteral(lit, pos.clone())),
@@ -64,12 +64,27 @@ impl Node {
                 Ok(Self::Litteral(lit.clone(), pos.clone()))
             },
             Self::Identifier(i, pos) => {
-                match enviornment.get(i) {
+                match variables.get(i) {
                     Ok(v) => Ok(Self::Litteral(v, pos.clone())),
                     Err(e) => {
                         eprintln!("{}", e);
                         std::process::exit(70);
                     }
+                }
+            },
+            Self::Assignment(i, v, pos) => {
+                if variables.contains_var(i) {
+                    let v = v.evaluate(variables)?;
+                    if let Node::Litteral(lit, _) = v.clone() {
+                        variables.assign(&i, lit);
+                        Ok(v)
+                    } else {
+                        eprintln!("Unknown variable type!");
+                        std::process::exit(70);
+                    }
+                } else {
+                    eprintln!("Undefined variable {}", i);
+                    std::process::exit(70);
                 }
             }
         }

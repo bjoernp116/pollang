@@ -1,2 +1,5 @@
-var a;
-print a;
+var quz;
+quz = 1;
+print quz;
+print quz = 2;
+print quz;

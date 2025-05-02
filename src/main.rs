@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 
 use anyhow::anyhow;
-use enviornment::Enviornment;
+use enviornment::{Enviornment, Variables};
 use parser::{AstFactory, Statement};
 use scanner::{Token, TokenType};
 mod interpreter;
@@ -106,7 +106,7 @@ fn main() -> anyhow::Result<()> {
             }*/
 
             let mut ast = AstFactory::new(tokens);
-            match ast.parse() {
+            match ast.parse_equality() {
                 Ok(h) => println!("{:?}", h),
                 Err(e) => {
                     eprintln!("{}", e);
@@ -135,9 +135,9 @@ fn main() -> anyhow::Result<()> {
             }*/
 
             let mut ast = AstFactory::new(tokens);
-            let statement = ast.parse()?;
+            let statement = ast.parse_equality()?;
             let mut enviornment: Enviornment = Enviornment {
-                variables: HashMap::new(),
+                variables: Variables(HashMap::new()),
                 statements: vec![Statement::Print(statement)]
             };
             enviornment.run();

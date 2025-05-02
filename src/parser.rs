@@ -18,7 +18,8 @@ pub enum Node {
     Parenthesis(Box<Node>),
     Unary(UnaryOperator, Box<Node>, Position),
     Litteral(Litteral, Position),
-    Identifier(String, Position)
+    Identifier(String, Position),
+    Assignment(String, Box<Node>, Position),
 }
 
 #[derive(Clone)]
@@ -154,7 +155,7 @@ impl AstFactory {
         match self.tokens[self.current].token_type {
             TokenType::Print => {
                 self.current += 1;
-                let value = self.parse_equality()?;
+                let value = self.parse_assignment()?;
                 Ok(Statement::Print(value))
             },
             TokenType::Var => {
@@ -170,7 +171,7 @@ impl AstFactory {
                         },
                         TokenType::Equal => {
                             self.current += 1;
-                            let expr = self.parse_equality()?;
+                            let expr = self.parse_assignment()?;
                             Ok(Statement::VarDecl(name, expr)) 
                         },
                         _ => {
@@ -183,16 +184,34 @@ impl AstFactory {
                 }
             }
             _ => {
-                let value = self.parse_equality()?;
+                let value = self.parse_assignment()?;
                 Ok(Statement::Expression(value))
             }
         }
     }
-    pub fn parse(&mut self) -> anyhow::Result<Node> {
-        Ok(self.parse_equality()?)
+    fn parse_assignment(&mut self) -> anyhow::Result<Node> {
+        let identifier: Node = self.parse_equality()?;
+        while self.current < self.tokens.len() {
+            match self.tokens[self.current].token_type {
+                TokenType::Equal => {
+                    if let Node::Identifier(name, pos) = identifier {
+                        self.current += 1;
+                        let value = self.parse_assignment()?;
+                        let position = Position::range(
+                            pos,
+                            value.position()
+                        );
+                        let node = Node::Assignment(name, Box::new(value), position); 
+                        return Ok(node);
+                    }
+                },
+                _ => break
+            }
+        }
+        Ok(identifier)
     }
 
-    fn parse_equality(&mut self) -> anyhow::Result<Node> {
+    pub fn parse_equality(&mut self) -> anyhow::Result<Node> {
         let mut node: Node = self.parse_term()?;
         while self.current < self.tokens.len() {
             match self.tokens[self.current].token_type {
@@ -345,7 +364,7 @@ impl AstFactory {
             tokens: private_tokens,
             current: 0,
         };
-        let node = parser.parse_equality()?;
+        let node = parser.parse_assignment()?;
         Ok(Node::Parenthesis(Box::new(node)))
     }
 
@@ -433,7 +452,8 @@ impl Display for Node {
                 position,
             } => write!(f, "({} {} {})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {})", e),
-            Node::Identifier(i, _) => write!(f, "_{}", i)
+            Node::Identifier(i, _) => write!(f, "_{}", i),
+            Node::Assignment(i, v, _) => write!(f, "{} = {}", i, v)
         }
     }
 }
@@ -451,7 +471,8 @@ impl std::fmt::Debug for Node {
                 position,
             } => write!(f, "({} {:?} {:?})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {:?})", e),
-            Node::Identifier(i, _) => write!(f, "_{}", i)
+            Node::Identifier(i, _) => write!(f, "_{}", i),
+            Node::Assignment(i, v, _) => write!(f, "{} = {}", i, v)
         }
     }
 }

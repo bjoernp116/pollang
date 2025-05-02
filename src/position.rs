@@ -34,7 +34,8 @@ impl Node {
             Self::Unary(_, _, position) => position.clone(),
             Self::Litteral(_, position) => position.clone(),
             Self::Parenthesis(child) => child.position(),
-            Self::Identifier(_, pos) => pos.clone()
+            Self::Identifier(_, pos) => pos.clone(),
+            Self::Assignment(_, _, pos) => pos.clone()
         }
     }
 }
