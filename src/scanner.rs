@@ -135,6 +135,7 @@ pub fn scan(str: String) -> anyhow::Result<Vec<Token>> {
             '/' if i+1 < stream.len() && stream[i+1] == '/' => {
                 loop {
                     if stream[i] == '\n' {
+                        line_number += 1;
                         break;
                     }
                     i += 1;
