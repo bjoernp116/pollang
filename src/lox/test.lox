@@ -1,6 +1,2 @@
-// This program prints the result of arithmetic operations involving strings and integers
-
-// This program tests that the + operator is only supported when both operands are numbers or both are strings
-print "the expression below is invalid";
-94 + "bar";
-print "this should not be printed";
+var foo = "bar";
+print foo + foo;

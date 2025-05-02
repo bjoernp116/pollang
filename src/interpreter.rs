@@ -1,30 +1,35 @@
 
-use crate::parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator};
+use crate::{enviornment::Enviornment, parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator}};
 use anyhow::anyhow;
 
 
 impl Statement {
-    pub fn execute(&mut self) -> anyhow::Result<()> {
+    pub fn execute(&mut self, enviornment: &mut Enviornment) -> anyhow::Result<()> {
         match self {
             Self::Expression(expr) => {
-                expr.evaluate()?;
+                expr.evaluate(enviornment)?;
             },
             Self::Print(expr) => {
-                let expr = expr.evaluate()?;
+                let expr = expr.evaluate(enviornment)?;
                 println!("{}", expr);
+            },
+            Self::VarDecl(ident, expr) => {
+                let expr = expr.evaluate(enviornment)?;
+                if let Node::Litteral(lit, _) = expr {
+                    enviornment.define(ident.clone(), lit);
+                }
             }
-
         }
         Ok(())
     } 
 }
 
 impl Node {
-    pub fn evaluate(&mut self) -> anyhow::Result<Node> {
+    pub fn evaluate(&mut self, enviornment: &mut Enviornment) -> anyhow::Result<Node> {
         match self {
             Self::Binary { left, right, operator, position } => {
-                let left = left.evaluate()?;
-                let right = right.evaluate()?;
+                let left = left.evaluate(enviornment)?;
+                let right = right.evaluate(enviornment)?;
 
                 if let (Node::Litteral(l, _), Node::Litteral(r, _)) = (left, right) {
                     let lit = operator.eval(l, r)?;
@@ -34,10 +39,10 @@ impl Node {
                 }
             },
             Self::Parenthesis(node) => {
-                node.evaluate()
+                node.evaluate(enviornment)
             },
             Self::Unary(op, node, pos) => {
-                let node = node.evaluate()?;
+                let node = node.evaluate(enviornment)?;
                 if let Node::Litteral(l, _) = node {
                     let lit = op.eval(l)?;
                     Ok(Node::Litteral(lit, pos.clone()))
@@ -47,6 +52,9 @@ impl Node {
             },
             Self::Litteral(lit, pos) => {
                 Ok(Self::Litteral(lit.clone(), pos.clone()))
+            },
+            Self::Identifier(i, pos) => {
+                Ok(Self::Litteral(enviornment.get(i)?, pos.clone()))
             }
         }
     }

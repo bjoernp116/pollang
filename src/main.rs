@@ -4,12 +4,14 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 
 use anyhow::anyhow;
+use enviornment::Enviornment;
 use parser::AstFactory;
 use scanner::{Token, TokenType};
 mod interpreter;
 mod parser;
 mod scanner;
 mod position;
+mod enviornment;
 
 #[derive(Parser, Debug)]
 #[command(version, long_about = None)]
@@ -133,28 +135,9 @@ fn main() -> anyhow::Result<()> {
             }*/
 
             let mut ast = AstFactory::new(tokens);
-            let head = ast.parse();
-            match head {
-                Ok(mut h) => {
-                    let res = h.evaluate();
-                    match res {
-                        Ok(res) => {
-                            println!("{}", res);
-                            exit_code.exit();
-                        }
-                        Err(e) => {
-                            eprintln!("{}", e);
-                            exit_code = ExitCode::Error(70);
-                            exit_code.exit();
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("{}", e);
-                    exit_code = ExitCode::Error(65);
-                    exit_code.exit();
-                }
-            };
+            let mut enviornment: Enviornment = (&mut ast).try_into()?;
+            enviornment.run();
+            
         }
         Command::Run => {
             let tokens: Vec<Token> = scanner::scan(file_contents)?;
@@ -174,39 +157,9 @@ fn main() -> anyhow::Result<()> {
             //     }
             // }
 
-            let mut ast = AstFactory::new(tokens);
-            let head = ast.parse_statements();
-            match head {
-                Ok(statements) => {
-                    for mut statement in statements {
-                        match statement.execute() {
-                            Ok(_) => (),
-                            Err(e) => {
-                                eprintln!("{}", e);
-                                ExitCode::Error(70).exit();
-                            }
-                        }
-                    }
-                    exit_code.exit();
-                    /*let res = h.evaluate();
-                    match res {
-                        Ok(res) => {
-                            println!("{}", res);
-                            exit_code.exit();
-                        }
-                        Err(e) => {
-                            eprintln!("{}", e);
-                            exit_code = ExitCode::Error(70);
-                            exit_code.exit();
-                        }
-                    }*/
-                }
-                Err(e) => {
-                    eprintln!("{}", e);
-                    exit_code = ExitCode::Error(65);
-                    exit_code.exit();
-                }
-            };
+            let mut ast: AstFactory = AstFactory::new(tokens);
+            let mut enviornment: Enviornment = (&mut ast).try_into()?;
+            enviornment.run();
         }
     }
     Ok(())

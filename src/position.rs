@@ -33,7 +33,8 @@ impl Node {
             Self::Binary { left, operator, right, position } => position.clone(),
             Self::Unary(_, _, position) => position.clone(),
             Self::Litteral(_, position) => position.clone(),
-            Self::Parenthesis(child) => child.position()
+            Self::Parenthesis(child) => child.position(),
+            Self::Identifier(_, pos) => pos.clone()
         }
     }
 }

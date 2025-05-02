@@ -18,6 +18,7 @@ pub enum Node {
     Parenthesis(Box<Node>),
     Unary(UnaryOperator, Box<Node>, Position),
     Litteral(Litteral, Position),
+    Identifier(String, Position)
 }
 
 #[derive(Clone)]
@@ -28,9 +29,11 @@ pub enum Litteral {
     String(String),
 }
 
+#[derive(Clone)]
 pub enum Statement {
     Expression(Node),
     Print(Node),
+    VarDecl(String, Node)
 }
 
 impl Display for Statement {
@@ -38,6 +41,7 @@ impl Display for Statement {
         match self {
             Statement::Print(t) => write!(f, "print: {}", t)?,
             Statement::Expression(e) => write!(f, "expr: {}", e)?,
+            Statement::VarDecl(i, e) => write!(f, "decl: {} = {}", i, e)?,
         }
         Ok(())
     }
@@ -149,6 +153,17 @@ impl AstFactory {
                 let value = self.parse_equality()?;
                 Ok(Statement::Print(value))
             },
+            TokenType::Var => {
+                self.current += 1;
+                let identifier = self.parse_number()?;
+                if let Node::Identifier(name, _) = identifier {
+                    self.current += 1;
+                    let expr = self.parse_equality()?;
+                    Ok(Statement::VarDecl(name, expr)) 
+                } else {
+                    Err(anyhow!("Expected identifier got {}", identifier))
+                }
+            }
             _ => {
                 let value = self.parse_equality()?;
                 Ok(Statement::Expression(value))
@@ -268,7 +283,7 @@ impl AstFactory {
         if self.current >= self.tokens.len() {
             return Err(anyhow!("Out of bounds access in parse_primary"));
         }
-        match self.tokens[self.current].token_type {
+        match self.tokens[self.current].token_type.clone() {
             TokenType::LeftParen => self.parse_paren(),
             TokenType::Bang | TokenType::Minus => self.parse_unary(),
             _ => self.parse_number(),
@@ -342,7 +357,11 @@ impl AstFactory {
             TokenType::StringLitteral(s) => {
                 self.current += 1;
                 Ok(Node::Litteral(Litteral::String(s.clone()), position))
-            }
+            },
+            TokenType::Identifier(i) => {
+                self.current += 1;
+                Ok(Node::Identifier(i.clone(), position)) 
+            },
             _ => Err(anyhow!(
                 "[line {}] Error at '{}': Expect expression.",
                 &self.tokens[self.current].position.line(),
@@ -396,6 +415,7 @@ impl Display for Node {
                 position,
             } => write!(f, "({} {} {})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {})", e),
+            Node::Identifier(i, _) => write!(f, "_{}", i)
         }
     }
 }
@@ -413,6 +433,7 @@ impl std::fmt::Debug for Node {
                 position,
             } => write!(f, "({} {:?} {:?})", operator, left, right),
             Node::Parenthesis(e) => write!(f, "(group {:?})", e),
+            Node::Identifier(i, _) => write!(f, "_{}", i)
         }
     }
 }
