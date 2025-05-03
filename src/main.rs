@@ -164,7 +164,7 @@ fn main() -> anyhow::Result<()> {
             let mut ast: AstFactory = AstFactory::new(tokens);
             let mut enviornment: Enviornment = (&mut ast).try_into()?;
             enviornment.run()?;
-            println!("{}", enviornment);
+            //println!("{}", enviornment);
             
         }
     }
