@@ -1,17 +1,19 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::{collections::HashMap, fs};
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 
 use anyhow::anyhow;
-use enviornment::{Enviornment, Variables};
+use environment::{Environment, Variables};
 use parser::{AstFactory, Statement};
 use scanner::{Token, TokenType};
 mod interpreter;
 mod parser;
 mod scanner;
 mod position;
-mod enviornment;
+mod environment;
 
 #[derive(Parser, Debug)]
 #[command(version, long_about = None)]
@@ -136,11 +138,12 @@ fn main() -> anyhow::Result<()> {
 
             let mut ast = AstFactory::new(tokens);
             let statement = ast.parse_equality()?;
-            let mut enviornment: Enviornment = Enviornment {
-                variables: Variables(HashMap::new()),
-                statements: vec![Statement::Print(statement)]
+            let mut enviornment: Environment = Environment {
+                variables: Variables(HashMap::new(), None),
+                statements: vec![Statement::Print(statement)],
             };
-            enviornment.run();
+            let enviornment_rc = Rc::new(RefCell::new(enviornment));
+            Environment::run(&enviornment_rc);
             
         }
         Command::Run => {
@@ -162,8 +165,10 @@ fn main() -> anyhow::Result<()> {
             // }
 
             let mut ast: AstFactory = AstFactory::new(tokens);
-            let mut enviornment: Enviornment = (&mut ast).try_into()?;
-            enviornment.run()?;
+            let enviornment: Environment = (&mut ast).try_into()?;
+            let enviornment_rc = Rc::new(RefCell::new(enviornment));
+            Environment::connect_blocks(&enviornment_rc);
+            Environment::run(&enviornment_rc)?;
             //println!("{}", enviornment);
         }
     }

@@ -1,6 +1,8 @@
 use std::{collections::VecDeque, fmt::Display};
+use std::rc::Rc;
+use std::cell::RefCell;
 
-use crate::{enviornment::Enviornment, position::Position, scanner::{Token, TokenType}};
+use crate::{environment::Environment, position::Position, scanner::{Token, TokenType}};
 use anyhow::anyhow;
 
 #[derive(Clone)]
@@ -31,7 +33,7 @@ pub enum Statement {
     Expression(Node),
     Print(Node),
     VarDecl(String, Node),
-    Block(Enviornment),
+    Block(Vec<Statement>),
 }
 
 impl Display for Statement {
@@ -41,7 +43,7 @@ impl Display for Statement {
             Statement::Expression(e) => write!(f, "expr: {}", e)?,
             Statement::VarDecl(i, e) => write!(f, "decl: {} = {}", i, e)?,
             Statement::Block(block) => {
-                writeln!(f, "block: {{\n{}}}", block)?;
+                writeln!(f, "block: {{\n{}}}", block.borrow())?;
             },
         }
         Ok(())
@@ -201,7 +203,8 @@ impl AstFactory {
                         std::process::exit(65);
                     }
                 }
-                Ok(Statement::Block(Enviornment::from(statements)))
+                let enviornment = Environment::from(statements);
+                Ok(Statement::Block(Rc::new(RefCell::new(enviornment))))
             }
             _ => {
                 let value = self.parse_assignment()?;

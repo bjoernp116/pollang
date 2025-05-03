@@ -1,8 +1,8 @@
-// This program tests that nested scopes can be created
-// and that local variables can be accessed
-var world = (30 * 82) - 49;
+var x = 2;
+var y = 3;
+var z = 4;
 {
-    var quz = "foo" + "43";
-    print quz;
+    var foo = 3;
+    var bar = 2;
+    print x;
 }
-print world;

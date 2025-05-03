@@ -1,5 +1,5 @@
 
-use crate::{enviornment::{Enviornment, Variables}, parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator}};
+use crate::{environment::{Environment, Variables}, parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator}};
 use anyhow::anyhow;
 
 
