@@ -231,7 +231,6 @@ impl AstFactory {
                             Some(Box::new(self.parse_statement()?))
                         },
                         ref t => {
-                            println!("{:?}", t);
                             None
                         }
                     }
