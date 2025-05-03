@@ -165,7 +165,6 @@ fn main() -> anyhow::Result<()> {
             let mut enviornment: Enviornment = (&mut ast).try_into()?;
             enviornment.run()?;
             //println!("{}", enviornment);
-            
         }
     }
     Ok(())

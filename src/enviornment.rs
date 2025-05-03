@@ -52,16 +52,22 @@ impl Enviornment {
                         self.variables.define(ident.clone(), lit);
                     }
                 },
-                Statement::Block(b) => {
-                    let mut enviornment = Enviornment {
-                        variables: self.variables.clone(),
-                        statements: b,
-                    };
-                    enviornment.run()?;
+                Statement::Block(mut b) => {
+                    b.variables = self.variables.clone();
+                    b.run()?;
                 }
             }
         }
         Ok(())
+    }
+}
+
+impl From<Vec<Statement>> for Enviornment {
+    fn from(statements: Vec<Statement>) -> Self {
+        Self {
+            variables: Variables(HashMap::new()),
+            statements
+        }
     }
 }
 
