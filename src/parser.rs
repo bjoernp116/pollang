@@ -155,22 +155,12 @@ impl AstFactory {
                     std::process::exit(65);
                 }
             };
-            match self.tokens.get(self.current) {
-                Some(Token {
-                    position: _,
-                    raw: _,
-                    token_type: TokenType::SemiColon
-                })=> {
-                    self.current += 1;
-                }
-                _ => (),
-            }
             out.push(node);
         }
         Ok(out)
     }
     pub fn parse_statement(&mut self) -> anyhow::Result<Statement> {
-        match self.tokens[self.current].token_type {
+        let out = match self.tokens[self.current].token_type {
             TokenType::Print => {
                 self.current += 1;
                 let value = self.parse_assignment()?;
@@ -240,7 +230,10 @@ impl AstFactory {
                             self.current += 1;
                             Some(Box::new(self.parse_statement()?))
                         },
-                        _ => None
+                        ref t => {
+                            println!("{:?}", t);
+                            None
+                        }
                     }
                 } else { None };
 
@@ -250,7 +243,20 @@ impl AstFactory {
                 let value = self.parse_assignment()?;
                 Ok(Statement::Expression(value))
             }
+        };
+
+        match self.tokens.get(self.current) {
+            Some(Token {
+                position: _,
+                raw: _,
+                token_type: TokenType::SemiColon
+            })=> {
+                self.current += 1;
+            }
+            _ => (),
         }
+        
+        out
     }
     fn parse_assignment(&mut self) -> anyhow::Result<Node> {
         let identifier: Node = self.parse_equality()?;
