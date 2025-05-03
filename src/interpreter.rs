@@ -48,6 +48,20 @@ impl Interpreter {
                 } else {
                     unreachable!();
                 }
+            },
+            Statement::If(condition, then_stmt, else_stmt) => {
+                let result = self.evaluate_expr(&condition)?;
+                match result {
+                    Node::Litteral(Litteral::Boolean(true), _) => {
+                        self.execute(*then_stmt)?;
+                    },
+                    Node::Litteral(Litteral::Boolean(false), _) => {
+                        if let Some(stmt) = else_stmt {
+                            self.execute(*stmt)?;
+                        }
+                    },
+                    _ => ()
+                }
             }
         }
         Ok(())
