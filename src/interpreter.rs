@@ -52,7 +52,11 @@ impl Interpreter {
             Statement::If(condition, then_stmt, else_stmt) => {
                 let result = self.evaluate_expr(&condition)?;
                 match result {
-                    Node::Litteral(Litteral::Boolean(true), _) => {
+                    Node::Litteral(
+                        Litteral::Boolean(true) | 
+                        Litteral::String(_) |
+                        Litteral::Number(_), 
+                    _) => {
                         self.execute(*then_stmt)?;
                     },
                     Node::Litteral(Litteral::Boolean(false), _) => {
@@ -158,10 +162,10 @@ impl BinaryOperator {
 
             (Boolean(true), Or, _) => Ok(Boolean(true)),
             (_, Or, Boolean(true)) => Ok(Boolean(true)),
-            (String(l), Or, _) => Ok(Boolean(true)),
-            (_, Or, String(r)) => Ok(Boolean(true)),
-            (Number(l), Or, _) => Ok(Boolean(true)),
-            (_, Or, Number(r)) => Ok(Boolean(true)),
+            (String(l), Or, _) => Ok(String(l)),
+            (_, Or, String(r)) => Ok(String(r)),
+            (Number(l), Or, _) => Ok(Number(l)),
+            (_, Or, Number(r)) => Ok(Number(r)),
             (_, Or, _) => Ok(Boolean(false)),
 
             (Boolean(false) | Nil, And, _) => Ok(Boolean(false)),
