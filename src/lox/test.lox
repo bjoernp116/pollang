@@ -1,9 +1,8 @@
-// The logical AND operator should return the first falsy value
-if (false and "bad") print "baz";
-if (nil and "bad") print "baz";
+// This program uses the logical AND operator to print the first falsy value
+// Or the last value if all values are truthy
+print false and 1;
+print true and 1;
+print 26 and "world" and false;
 
-// If all values are truthy, it returns the last value
-if (true and "foo") print "foo";
-if (82 and "hello") print "hello";
-if ("hello" and "hello") print "hello";
-if ("" and "world") print "world";
+print 26 and true;
+print 26 and "world" and 26;

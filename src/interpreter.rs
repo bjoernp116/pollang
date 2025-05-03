@@ -212,7 +212,7 @@ impl BinaryOperator {
             (Boolean(false) | Nil, And, _) => Ok(Boolean(false)),
             (_, And, Boolean(false) | Nil) => Ok(Boolean(false)),
             (Boolean(true), And, Boolean(true)) => Ok(Boolean(true)),
-            (l, And, r) if l.is_truthy() && r.is_truthy() => Ok(Boolean(true)),
+            (l, And, r) if l.is_truthy() && r.is_truthy() => Ok(r),
             (_, And, _) => Ok(Boolean(false)),
 
 
