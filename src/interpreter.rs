@@ -161,10 +161,10 @@ impl BinaryOperator {
             (Number(_), Eq, String(_)) => Ok(Boolean(false)),
 
             (Boolean(true), Or, _) => Ok(Boolean(true)),
-            (_, Or, Boolean(true)) => Ok(Boolean(true)),
-            (String(l), Or, _) => Ok(String(l)),
-            (_, Or, String(r)) => Ok(String(r)),
             (Number(l), Or, _) => Ok(Number(l)),
+            (String(l), Or, _) => Ok(String(l)),
+            (_, Or, Boolean(true)) => Ok(Boolean(true)),
+            (_, Or, String(r)) => Ok(String(r)),
             (_, Or, Number(r)) => Ok(Number(r)),
             (_, Or, _) => Ok(Boolean(false)),
 
