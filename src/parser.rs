@@ -140,7 +140,13 @@ impl AstFactory {
     pub fn parse_statements(&mut self) -> anyhow::Result<Vec<Statement>> {
         let mut out: Vec<Statement> = Vec::new();
         while self.current < self.tokens.len() {
-            let node = self.parse_statement()?;
+            let node = match self.parse_statement() {
+                Ok(expr) => expr,
+                Err(e) => {
+                    eprintln!("{}", e);
+                    std::process::exit(65);
+                }
+            };
             match self.tokens.get(self.current) {
                 Some(Token {
                     position: _,

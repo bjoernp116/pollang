@@ -1,3 +1,4 @@
+print;
 var bar = "global bar";
 var world = "global world";
 var hello = "global hello";
