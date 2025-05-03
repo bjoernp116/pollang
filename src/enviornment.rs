@@ -31,7 +31,7 @@ impl Variables {
 #[derive(Clone)]
 pub struct Enviornment {
     pub variables: Variables,
-    pub statements: Vec<Statement>
+    pub statements: Vec<Statement>,
 }
 
 impl Enviornment {
@@ -51,6 +51,13 @@ impl Enviornment {
                     if let Node::Litteral(lit, _) = expr {
                         self.variables.define(ident.clone(), lit);
                     }
+                },
+                Statement::Block(b) => {
+                    let mut enviornment = Enviornment {
+                        variables: self.variables.clone(),
+                        statements: b,
+                    };
+                    enviornment.run()?;
                 }
             }
         }
@@ -83,11 +90,11 @@ impl Display for Enviornment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Variables:")?; 
         for (name, value) in self.variables.0.clone() {
-            writeln!(f, "\t{} = {}", name, value)?; 
+            writeln!(f, "{} = {}", name, value)?; 
         }
         writeln!(f, "Statements:")?;
         for statement in self.statements.clone() {
-            writeln!(f, "\n{}", statement)?;
+            writeln!(f, "{}", statement)?;
         }
         Ok(())
     }

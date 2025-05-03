@@ -18,6 +18,9 @@ impl Statement {
                 if let Node::Litteral(lit, _) = expr {
                     variables.define(ident.clone(), lit);
                 }
+            },
+            Self::Block(b) => {
+                todo!()
             }
         }
         Ok(())
@@ -72,7 +75,7 @@ impl Node {
                     }
                 }
             },
-            Self::Assignment(i, v, pos) => {
+            Self::Assignment(i, v, _) => {
                 if variables.contains_var(i) {
                     let v = v.evaluate(variables)?;
                     if let Node::Litteral(lit, _) = v.clone() {

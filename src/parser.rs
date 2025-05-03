@@ -11,10 +11,6 @@ pub enum Node {
         operator: BinaryOperator,
         position: Position,
     },
-    /*Parenthesis {
-        left: Box<Node>,
-        right: Box<Node>,
-    },*/
     Parenthesis(Box<Node>),
     Unary(UnaryOperator, Box<Node>, Position),
     Litteral(Litteral, Position),
@@ -34,7 +30,8 @@ pub enum Litteral {
 pub enum Statement {
     Expression(Node),
     Print(Node),
-    VarDecl(String, Node)
+    VarDecl(String, Node),
+    Block(Vec<Statement>)
 }
 
 impl Display for Statement {
@@ -43,6 +40,13 @@ impl Display for Statement {
             Statement::Print(t) => write!(f, "print: {}", t)?,
             Statement::Expression(e) => write!(f, "expr: {}", e)?,
             Statement::VarDecl(i, e) => write!(f, "decl: {} = {}", i, e)?,
+            Statement::Block(block) => {
+                writeln!(f, "block: {{")?;
+                for stmnt in block {
+                    writeln!(f, "{}", stmnt)?
+                }
+                writeln!(f, "}}")?;
+            },
         }
         Ok(())
     }
@@ -139,8 +143,8 @@ impl AstFactory {
             let node = self.parse_statement()?;
             match self.tokens.get(self.current) {
                 Some(Token {
-                    position,
-                    raw,
+                    position: _,
+                    raw: _,
                     token_type: TokenType::SemiColon
                 })=> {
                     self.current += 1;
@@ -182,6 +186,26 @@ impl AstFactory {
                 } else {
                     Err(anyhow!("Expected identifier got {}", identifier))
                 }
+            }
+            TokenType::LeftBrace => {
+                let mut statements: Vec<Statement> = Vec::new();
+                self.current += 1;
+                while self.current < self.tokens.len() {
+                    match self.tokens[self.current].token_type {
+                        TokenType::RightBrace => {
+                            self.current += 1;
+                            break;
+                        },
+                        TokenType::SemiColon => self.current += 1,
+                        _ => statements.push(self.parse_statement()?)
+                    }
+                    if self.current == self.tokens.len() {
+                        eprintln!("[line {}] Error at end: Expect '}}'.", 
+                            self.tokens[self.current - 1].position.line());
+                        std::process::exit(65);
+                    }
+                }
+                Ok(Statement::Block(statements))
             }
             _ => {
                 let value = self.parse_assignment()?;
