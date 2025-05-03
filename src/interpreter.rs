@@ -51,20 +51,14 @@ impl Interpreter {
             },
             Statement::If(condition, then_stmt, else_stmt) => {
                 let result = self.evaluate_expr(&condition)?;
-                match result {
-                    Node::Litteral(
-                        Litteral::Boolean(true) | 
-                        Litteral::String(_) |
-                        Litteral::Number(_), 
-                    _) => {
+                if let Node::Litteral(litteral, _) = result {
+                    if litteral.is_truthy() {
                         self.execute(*then_stmt)?;
-                    },
-                    Node::Litteral(Litteral::Boolean(false), _) => {
+                    } else {
                         if let Some(stmt) = else_stmt {
                             self.execute(*stmt)?;
                         }
-                    },
-                    _ => ()
+                    }
                 }
             }
         }
@@ -178,6 +172,18 @@ impl BinaryOperator {
             (Number(_), Add, String(_)) => Err(anyhow!("Operands must be two numbers or two strings")),
             (_, Add | Sub | Mul | Div | Pow, _) => Err(anyhow!("Operands must be numbers")),
             (_, Eq | NEq | LEq | GEq | L | G, _) => Err(anyhow!("Operands must be numbers")),
+        }
+    }
+}
+
+impl Litteral {
+    pub fn is_truthy(&self) -> bool {
+        match self {
+            Self::Boolean(true) => true,
+            Self::Boolean(false) => false,
+            Self::Nil => false,
+            Self::String(_) => true,
+            Self::Number(_) => true,
         }
     }
 }
