@@ -1,5 +1,9 @@
-var a = "quz";
-var b = "quz";
-(a = false) or (b = true) or (a = "quz");
-print a;
-print b;
+// The logical AND operator should return the first falsy value
+if (false and "bad") print "baz";
+if (nil and "bad") print "baz";
+
+// If all values are truthy, it returns the last value
+if (true and "foo") print "foo";
+if (82 and "hello") print "hello";
+if ("hello" and "hello") print "hello";
+if ("" and "world") print "world";

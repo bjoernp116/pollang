@@ -74,17 +74,39 @@ impl Interpreter {
                 position
             } => {
                 let left = self.evaluate_expr(left)?;
-                if let Node::Litteral(l, lp) = left.clone() {
+                if let Node::Litteral(l, _) = left.clone() {
                     if l.is_truthy() {
                         return Ok(left);
                     }
                     let right = self.evaluate_expr(right)?;
-                    if let Node::Litteral(r, rp) = right {
-                        let pos = Position::range(lp, rp);
+                    if let Node::Litteral(r, _) = right {
                         return Ok(
                             Node::Litteral(
                                 BinaryOperator::Or.eval(l, r)?,
-                                pos
+                                position.clone()
+                            )
+                        );
+                    }
+                }
+                unreachable!()
+            },
+            Node::Binary { 
+                left, 
+                right, 
+                operator: BinaryOperator::And,
+                position
+            } => {
+                let left = self.evaluate_expr(left)?;
+                if let Node::Litteral(l, _) = left.clone() {
+                    if !l.is_truthy() {
+                        return Ok(left);
+                    }
+                    let right = self.evaluate_expr(right)?;
+                    if let Node::Litteral(r, _) = right {
+                        return Ok(
+                            Node::Litteral(
+                                BinaryOperator::And.eval(l, r)?,
+                                position.clone()
                             )
                         );
                     }
@@ -190,6 +212,7 @@ impl BinaryOperator {
             (Boolean(false) | Nil, And, _) => Ok(Boolean(false)),
             (_, And, Boolean(false) | Nil) => Ok(Boolean(false)),
             (Boolean(true), And, Boolean(true)) => Ok(Boolean(true)),
+            (l, And, r) if l.is_truthy() && r.is_truthy() => Ok(Boolean(true)),
             (_, And, _) => Ok(Boolean(false)),
 
 
