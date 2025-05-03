@@ -61,7 +61,20 @@ impl Interpreter {
                     }
                 } else {
                 }
+            },
+            Statement::While(condition, then_stmt) => {
+                let result = self.evaluate_expr(&condition)?;
+                if let Node::Litteral(litteral, _) = result {
+                    loop {
+                        if litteral.is_truthy() {
+                            self.execute(*then_stmt.clone())?;
+                        } else {
+                            break;
+                        }     
+                    }
+                }
             }
+
         }
         Ok(())
     } 

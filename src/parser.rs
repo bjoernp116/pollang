@@ -33,6 +33,7 @@ pub enum Statement {
     VarDecl(String, Node),
     Block(Vec<Statement>),
     If(Node, Box<Statement>, Option<Box<Statement>>),
+    While(Node, Box<Statement>),
 }
 
 impl Display for Statement {
@@ -54,6 +55,10 @@ impl Display for Statement {
                 if let Some(el) = els {
                     writeln!(f, "else {}", el)?;
                 }
+            },
+            Statement::While(condition, then) => {
+                writeln!(f, "while {}", condition)?;
+                writeln!(f, "do {}", then)?;
             }
         }
         Ok(())
@@ -243,7 +248,24 @@ impl AstFactory {
                 } else { None };
 
                 Ok(Statement::If(condition, statement, else_stmnt))
+            },
+            TokenType::While => {
+                self.current += 1;
+                match self.tokens[self.current].token_type {
+                    TokenType::LeftParen => {},
+                    _ => {
+                        eprintln!("Expected ( after if!");
+                        std::process::exit(65);
+                    }
+                }
+                self.current += 1;
+                let condition = self.parse_assignment()?;
+                self.current += 1;
+                let statement = Box::new(self.parse_statement()?); 
+
+                Ok(Statement::While(condition, statement))
             }
+         
             _ => {
                 let value = self.parse_assignment()?;
                 Ok(Statement::Expression(value))
