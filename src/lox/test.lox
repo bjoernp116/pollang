@@ -1,8 +1,5 @@
 var a = 20;
-if (a == 20) {
+if (a == 30 or true) {
     print "True"; 
-}
-else {
-    print "False";
 }
 

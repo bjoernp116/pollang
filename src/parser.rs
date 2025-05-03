@@ -111,6 +111,9 @@ pub enum BinaryOperator {
     NEq,
     L,
     G,
+
+    Or,
+    And
 }
 
 impl Display for BinaryOperator {
@@ -127,6 +130,9 @@ impl Display for BinaryOperator {
             BinaryOperator::NEq => "!=",
             BinaryOperator::L => "<",
             BinaryOperator::G => ">",
+            BinaryOperator::Or => "||",
+            BinaryOperator::And => "&&",
+
         };
         write!(f, "{}", op)
     }
@@ -258,7 +264,7 @@ impl AstFactory {
         out
     }
     fn parse_assignment(&mut self) -> anyhow::Result<Node> {
-        let identifier: Node = self.parse_equality()?;
+        let identifier: Node = self.parse_or()?;
         while self.current < self.tokens.len() {
             match self.tokens[self.current].token_type {
                 TokenType::Equal => {
@@ -279,6 +285,55 @@ impl AstFactory {
         Ok(identifier)
     }
 
+    pub fn parse_or(&mut self) -> anyhow::Result<Node> {
+        let mut node = self.parse_and()?;
+        while self.current < self.tokens.len() {
+            match self.tokens[self.current].token_type {
+                TokenType::Or => {
+                    let op = self.tokens[self.current].clone();
+                    self.current += 1;
+                    if self.current >= self.tokens.len() {
+                        break;
+                    }
+                    let right = Box::new(self.parse_and()?);
+                    let position = Position::range(node.position(), right.position());
+                    node = Node::Binary {
+                        left: Box::new(node),
+                        right,
+                        operator: op.try_into()?,
+                        position
+                    };
+                },
+                _ => break 
+            }
+        }
+        Ok(node)
+    }
+
+    pub fn parse_and(&mut self) -> anyhow::Result<Node> {
+        let mut node = self.parse_equality()?;
+        while self.current < self.tokens.len() {
+            match self.tokens[self.current].token_type {
+                TokenType::And => {
+                    let op = self.tokens[self.current].clone();
+                    self.current += 1;
+                    if self.current >= self.tokens.len() {
+                        break;
+                    }
+                    let right = Box::new(self.parse_equality()?);
+                    let position = Position::range(node.position(), right.position());
+                    node = Node::Binary {
+                        left: Box::new(node),
+                        right,
+                        operator: op.try_into()?,
+                        position
+                    };
+                },
+                _ => break 
+            }
+        }
+        Ok(node)
+    }
     pub fn parse_equality(&mut self) -> anyhow::Result<Node> {
         let mut node: Node = self.parse_term()?;
         while self.current < self.tokens.len() {
@@ -491,6 +546,8 @@ impl TryFrom<Token> for BinaryOperator {
             TokenType::BangEqual => Ok(BinaryOperator::NEq),
             TokenType::Less => Ok(BinaryOperator::L),
             TokenType::Greater => Ok(BinaryOperator::G),
+            TokenType::Or => Ok(BinaryOperator::Or),
+            TokenType::And => Ok(BinaryOperator::And),
             _ => Err(anyhow!("Cant convert Token {} to operator", token)),
         }
     }

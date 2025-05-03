@@ -156,6 +156,20 @@ impl BinaryOperator {
             (String(_), Eq, Number(_)) => Ok(Boolean(false)),
             (Number(_), Eq, String(_)) => Ok(Boolean(false)),
 
+            (Boolean(true), Or, _) => Ok(Boolean(true)),
+            (_, Or, Boolean(true)) => Ok(Boolean(true)),
+            (String(l), Or, _) => Ok(String(l)),
+            (_, Or, String(r)) => Ok(String(r)),
+            (Number(l), Or, _) => Ok(Number(l)),
+            (_, Or, Number(r)) => Ok(Number(r)),
+            (_, Or, _) => Ok(Boolean(false)),
+
+            (Boolean(false) | Nil, And, _) => Ok(Boolean(false)),
+            (_, And, Boolean(false) | Nil) => Ok(Boolean(false)),
+            (Boolean(true), And, Boolean(true)) => Ok(Boolean(true)),
+            (_, And, _) => Ok(Boolean(false)),
+
+
             (String(_), Add, Number(_)) |
             (Number(_), Add, String(_)) => Err(anyhow!("Operands must be two numbers or two strings")),
             (_, Add | Sub | Mul | Div | Pow, _) => Err(anyhow!("Operands must be numbers")),
