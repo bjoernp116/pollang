@@ -63,9 +63,9 @@ impl Interpreter {
                 }
             },
             Statement::While(condition, then_stmt) => {
-                let result = self.evaluate_expr(&condition)?;
-                if let Node::Litteral(litteral, _) = result {
-                    loop {
+                loop {
+                    let result = self.evaluate_expr(&condition)?;
+                    if let Node::Litteral(litteral, _) = result {
                         if litteral.is_truthy() {
                             self.execute(*then_stmt.clone())?;
                         } else {
