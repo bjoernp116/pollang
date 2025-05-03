@@ -1,8 +1,6 @@
 use std::{collections::VecDeque, fmt::Display};
-use std::rc::Rc;
-use std::cell::RefCell;
 
-use crate::{environment::Environment, position::Position, scanner::{Token, TokenType}};
+use crate::{position::Position, scanner::{Token, TokenType}};
 use anyhow::anyhow;
 
 #[derive(Clone)]
@@ -43,7 +41,11 @@ impl Display for Statement {
             Statement::Expression(e) => write!(f, "expr: {}", e)?,
             Statement::VarDecl(i, e) => write!(f, "decl: {} = {}", i, e)?,
             Statement::Block(block) => {
-                writeln!(f, "block: {{\n{}}}", block.borrow())?;
+                writeln!(f, "block: {{\n")?;
+                for stmnt in block {
+                    writeln!(f, "\t{}", stmnt)?;
+                }
+                writeln!(f, "}}\n")?;
             },
         }
         Ok(())
@@ -203,8 +205,7 @@ impl AstFactory {
                         std::process::exit(65);
                     }
                 }
-                let enviornment = Environment::from(statements);
-                Ok(Statement::Block(Rc::new(RefCell::new(enviornment))))
+                Ok(Statement::Block(statements))
             }
             _ => {
                 let value = self.parse_assignment()?;

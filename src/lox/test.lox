@@ -1,8 +1,19 @@
-var x = 2;
-var y = 3;
-var z = 4;
+var bar = "global bar";
+var world = "global world";
+var hello = "global hello";
 {
-    var foo = 3;
-    var bar = 2;
-    print x;
+  var bar = "outer bar";
+  var world = "outer world";
+  {
+    var bar = "inner bar";
+    print bar;
+    print world;
+    print hello;
+  }
+  print bar;
+  print world;
+  print hello;
 }
+print bar;
+print world;
+print hello;

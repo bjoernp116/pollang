@@ -1,12 +1,10 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::{collections::HashMap, fs};
+use std::fs;
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 
 use anyhow::anyhow;
-use environment::{Environment, Variables};
+use interpreter::Interpreter;
 use parser::{AstFactory, Statement};
 use scanner::{Token, TokenType};
 mod interpreter;
@@ -122,7 +120,7 @@ fn main() -> anyhow::Result<()> {
             let tokens: Vec<Token> = scanner::scan(file_contents)?;
             // You can use print statements as follows for debugging, they'll be visible when running tests.
             //
-            let mut exit_code = if tokens.iter().any(|t| !t.is_valid()) {
+            let mut _exit_code = if tokens.iter().any(|t| !t.is_valid()) {
                 ExitCode::Error(65)
             } else {
                 ExitCode::Success
@@ -138,19 +136,16 @@ fn main() -> anyhow::Result<()> {
 
             let mut ast = AstFactory::new(tokens);
             let statement = ast.parse_equality()?;
-            let mut enviornment: Environment = Environment {
-                variables: Variables(HashMap::new(), None),
-                statements: vec![Statement::Print(statement)],
-            };
-            let enviornment_rc = Rc::new(RefCell::new(enviornment));
-            Environment::run(&enviornment_rc);
+            let statement = Statement::Print(statement);
+            let mut interpreter = Interpreter::new();
+            interpreter.execute(statement)?;
             
         }
         Command::Run => {
             let tokens: Vec<Token> = scanner::scan(file_contents)?;
             // You can use print statements as follows for debugging, they'll be visible when running tests.
             //
-            let mut exit_code = if tokens.iter().any(|t| !t.is_valid()) {
+            let mut _exit_code = if tokens.iter().any(|t| !t.is_valid()) {
                 ExitCode::Error(65)
             } else {
                 ExitCode::Success
@@ -165,11 +160,9 @@ fn main() -> anyhow::Result<()> {
             // }
 
             let mut ast: AstFactory = AstFactory::new(tokens);
-            let enviornment: Environment = (&mut ast).try_into()?;
-            let enviornment_rc = Rc::new(RefCell::new(enviornment));
-            Environment::connect_blocks(&enviornment_rc);
-            Environment::run(&enviornment_rc)?;
-            //println!("{}", enviornment);
+            let statements = ast.parse_statements()?;
+            let mut interpreter = Interpreter::new();
+            interpreter.interpret(statements)?;
         }
     }
     Ok(())
