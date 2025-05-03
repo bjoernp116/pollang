@@ -234,13 +234,15 @@ impl AstFactory {
                 let condition = self.parse_assignment()?;
                 self.current += 1;
                 let statement = Box::new(self.parse_statement()?); 
-                let else_stmnt = match self.tokens[self.current].token_type {
-                    TokenType::Else => {
-                        self.current += 1;
-                        Some(Box::new(self.parse_statement()?))
-                    },
-                    _ => None
-                };
+                let else_stmnt = if self.current < self.tokens.len() {
+                    match self.tokens[self.current].token_type {
+                        TokenType::Else => {
+                            self.current += 1;
+                            Some(Box::new(self.parse_statement()?))
+                        },
+                        _ => None
+                    }
+                } else { None };
 
                 Ok(Statement::If(condition, statement, else_stmnt))
             }
