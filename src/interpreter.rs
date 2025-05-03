@@ -59,6 +59,8 @@ impl Interpreter {
                             self.execute(*stmt)?;
                         }
                     }
+                } else {
+                    self.execute(*then_stmt)?;
                 }
             }
         }
