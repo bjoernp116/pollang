@@ -21,6 +21,9 @@ struct Cli {
 
     #[arg()]
     file_path: PathBuf,
+
+    #[arg(short, long, default_value_t = false)]
+    debug: bool
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -161,6 +164,13 @@ fn main() -> anyhow::Result<()> {
 
             let mut ast: AstFactory = AstFactory::new(tokens);
             let statements = ast.parse_statements()?;
+            if args.debug {
+                println!("DEBUG: {{");
+                for stmt in statements.clone() {
+                    println!("\t{}", stmt);
+                }
+                println!("}}");
+            }
             let mut interpreter = Interpreter::new();
             interpreter.interpret(statements)?;
         }

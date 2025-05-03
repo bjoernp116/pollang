@@ -1,8 +1,8 @@
 
-use crate::{environment::Environment, parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator}};
+use crate::{environment::Environment, parser::{BinaryOperator, Litteral, Node, Statement, UnaryOperator}, position::Position};
 use anyhow::anyhow;
 
-
+#[allow(unused)]
 pub struct Interpreter {
     environment: Environment,
     global: Environment,
@@ -60,7 +60,6 @@ impl Interpreter {
                         }
                     }
                 } else {
-                    self.execute(*then_stmt)?;
                 }
             }
         }
@@ -68,6 +67,30 @@ impl Interpreter {
     } 
     pub fn evaluate_expr(&mut self, expr: &Node) -> anyhow::Result<Node> {
         match expr {
+            Node::Binary { 
+                left, 
+                right, 
+                operator: BinaryOperator::Or,
+                position
+            } => {
+                let left = self.evaluate_expr(left)?;
+                if let Node::Litteral(l, lp) = left.clone() {
+                    if l.is_truthy() {
+                        return Ok(left);
+                    }
+                    let right = self.evaluate_expr(right)?;
+                    if let Node::Litteral(r, rp) = right {
+                        let pos = Position::range(lp, rp);
+                        return Ok(
+                            Node::Litteral(
+                                BinaryOperator::Or.eval(l, r)?,
+                                pos
+                            )
+                        );
+                    }
+                }
+                unreachable!()
+            },
             Node::Binary { left, right, operator, position } => {
                 let left = self.evaluate_expr(left)?;
                 let right = self.evaluate_expr(right)?;

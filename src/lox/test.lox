@@ -1,5 +1,5 @@
-var a = 20;
-if (a == 30 or true) {
-    print "True"; 
-}
-
+var a = "quz";
+var b = "quz";
+(a = false) or (b = true) or (a = "quz");
+print a;
+print b;
