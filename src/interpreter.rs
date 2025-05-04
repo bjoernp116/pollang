@@ -49,28 +49,56 @@ impl Interpreter {
                     unreachable!();
                 }
             },
-            Statement::If(condition, then_stmt, else_stmt) => {
+            Statement::If(condition, body, else_body) => {
                 let result = self.evaluate_expr(&condition)?;
                 if let Node::Litteral(litteral, _) = result {
                     if litteral.is_truthy() {
-                        self.execute(*then_stmt)?;
+                        self.execute(*body)?;
                     } else {
-                        if let Some(stmt) = else_stmt {
+                        if let Some(stmt) = else_body {
                             self.execute(*stmt)?;
                         }
                     }
                 } else {
                 }
             },
-            Statement::While(condition, then_stmt) => {
+            Statement::While(condition, body) => {
                 loop {
                     let result = self.evaluate_expr(&condition)?;
                     if let Node::Litteral(litteral, _) = result {
                         if litteral.is_truthy() {
-                            self.execute(*then_stmt.clone())?;
+                            self.execute(*body.clone())?;
                         } else {
                             break;
                         }     
+                    }
+                }
+            }
+
+            Statement::For(init, con, inc, body) => {
+                let (ident, value) = match *init.clone() {
+                    Statement::VarDecl(ident, value) => {
+                        (ident, value)
+                    },
+                    _ => {
+                        eprintln!("Expected variable definition in for loop!");
+                        std::process::exit(70);
+                    }
+                };
+                self.execute(*init)?;
+                loop {
+                    if let Some(condition) = con.clone() {
+                        let result = self.evaluate_expr(&condition)?;
+                        if let Node::Litteral(litteral, _) = result {
+                            if litteral.is_truthy() {
+                                self.execute(*body.clone())?;
+                            } else {
+                                break;
+                            }     
+                        }
+                    }
+                    if let Some(increment) = inc.clone() {
+                        self.evaluate_expr(&increment)?;
                     }
                 }
             }

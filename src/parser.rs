@@ -34,6 +34,7 @@ pub enum Statement {
     Block(Vec<Statement>),
     If(Node, Box<Statement>, Option<Box<Statement>>),
     While(Node, Box<Statement>),
+    For(Box<Statement>, Option<Node>, Option<Node>, Box<Statement>),
 }
 
 impl Display for Statement {
@@ -56,9 +57,13 @@ impl Display for Statement {
                     writeln!(f, "else {}", el)?;
                 }
             },
-            Statement::While(condition, then) => {
+            Statement::While(condition, body) => {
                 writeln!(f, "while {}", condition)?;
-                writeln!(f, "do {}", then)?;
+                writeln!(f, "do {}", body)?;
+            },
+            Statement::For(init, con, inc, body) => {
+                writeln!(f, "for {}, {:?}, {:?}", init, con, inc)?;
+                writeln!(f, "do {}", body)?;
             }
         }
         Ok(())
@@ -265,7 +270,46 @@ impl AstFactory {
 
                 Ok(Statement::While(condition, statement))
             }
-         
+            TokenType::For => {
+                self.current += 1;
+                match self.tokens[self.current].token_type {
+                    TokenType::LeftParen => {},
+                    _ => {
+                        eprintln!("Expected ( after for!");
+                        std::process::exit(65);
+                    }
+                }
+                self.current += 1;
+                let constructor = Box::new(self.parse_statement()?);
+                println!("constructor");
+                if let Ok(condition) = self.parse_assignment() {
+                    println!("condition");
+                    if let Ok(incrementer) = self.parse_assignment() { 
+                        println!("incrementer");
+                        self.current += 1;
+                        let body = Box::new(self.parse_statement()?);
+                        return Ok(
+                            Statement::For(
+                                constructor, Some(condition), Some(incrementer), body
+                            )
+                        );
+                    }
+                    self.current += 2;
+                    let body = Box::new(self.parse_statement()?);
+                    return Ok(
+                        Statement::For(
+                            constructor, Some(condition), None, body
+                        )
+                    );
+                }
+                self.current += 1;
+                println!("body");
+                let body = Box::new(self.parse_statement()?);
+
+                Ok(Statement::For(
+                    constructor, None, None, body)
+                )
+            }
             _ => {
                 let value = self.parse_assignment()?;
                 Ok(Statement::Expression(value))
