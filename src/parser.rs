@@ -295,7 +295,7 @@ impl AstFactory {
                             )
                         );
                     }
-                    self.current += 2;
+                    self.current += 1;
                     let body = Box::new(self.parse_statement()?);
                     return Ok(
                         Statement::For(
