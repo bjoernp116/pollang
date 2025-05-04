@@ -76,16 +76,18 @@ impl Interpreter {
             }
 
             Statement::For(init, con, inc, body) => {
-                let (ident, value) = match *init.clone() {
-                    Statement::VarDecl(ident, value) => {
-                        (ident, value)
-                    },
-                    _ => {
-                        eprintln!("Expected variable definition in for loop!");
-                        std::process::exit(70);
-                    }
-                };
-                self.execute(*init)?;
+                if let Some(constructor) = init.clone() {
+                    match *constructor.clone() {
+                        Statement::VarDecl(ident, value) => {
+                            (ident, value)
+                        },
+                        _ => {
+                            eprintln!("Expected variable definition in for loop!");
+                            std::process::exit(70);
+                        }
+                    };
+                    self.execute(*constructor)?;
+                }
                 loop {
                     if let Some(condition) = con.clone() {
                         let result = self.evaluate_expr(&condition)?;

@@ -26,7 +26,7 @@ pub enum Litteral {
     String(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Statement {
     Expression(Node),
     Print(Node),
@@ -34,7 +34,7 @@ pub enum Statement {
     Block(Vec<Statement>),
     If(Node, Box<Statement>, Option<Box<Statement>>),
     While(Node, Box<Statement>),
-    For(Box<Statement>, Option<Node>, Option<Node>, Box<Statement>),
+    For(Option<Box<Statement>>, Option<Node>, Option<Node>, Box<Statement>),
 }
 
 impl Display for Statement {
@@ -62,7 +62,7 @@ impl Display for Statement {
                 writeln!(f, "do {}", body)?;
             },
             Statement::For(init, con, inc, body) => {
-                writeln!(f, "for {}, {:?}, {:?}", init, con, inc)?;
+                writeln!(f, "for {:?}, {:?}, {:?}", init, con, inc)?;
                 writeln!(f, "do {}", body)?;
             }
         }
@@ -160,6 +160,9 @@ impl AstFactory {
             current: 0,
             tokens: input.into(),
         }
+    }
+    pub fn is(&self, token_type: TokenType) -> bool {
+        self.tokens[self.current].token_type == token_type
     }
     pub fn parse_statements(&mut self) -> anyhow::Result<Vec<Statement>> {
         let mut out: Vec<Statement> = Vec::new();
@@ -280,18 +283,48 @@ impl AstFactory {
                     }
                 }
                 self.current += 1;
-                let constructor = Box::new(self.parse_statement()?);
-                //println!("constructor");
-                if let Ok(condition) = self.parse_assignment() {
-                    //println!("condition");
+                if self.is(TokenType::SemiColon) {
                     self.current += 1;
-                    if let Ok(incrementer) = self.parse_assignment() { 
-                        //println!("incrementer");
+                    if self.is(TokenType::SemiColon) {
+                        self.current += 1;
+                        if self.is(TokenType::RightParen) {
+                            self.current += 1;
+                            let body = Box::new(self.parse_statement()?);
+                            return Ok(Statement::For(None, None, None, body))
+                        }
+                        let increment = self.parse_assignment()?;
+                        self.current += 1;
+                        let body = Box::new(self.parse_statement()?);
+                        return Ok(Statement::For(None, None, Some(increment), body))
+                    } else {
+                        let condition = self.parse_assignment()?;
+                        self.current += 1;
+                        if self.is(TokenType::RightParen) {
+                            self.current += 1;
+                            let body = Box::new(self.parse_statement()?);
+                            return Ok(Statement::For(None, Some(condition), None, body))
+                        }
+                    }
+                } else {
+
+                }
+                if let Ok(constructor) = self.parse_statement() {
+                    if let Ok(condition) = self.parse_assignment() {
+                        self.current += 1;
+                        if let Ok(incrementer) = self.parse_assignment() { 
+                            self.current += 1;
+                            let body = Box::new(self.parse_statement()?);
+                            return Ok(
+                                Statement::For(
+                                    Some(Box::new(constructor)), Some(condition), Some(incrementer), body
+                                )
+                            );
+                        }
                         self.current += 1;
                         let body = Box::new(self.parse_statement()?);
                         return Ok(
                             Statement::For(
-                                constructor, Some(condition), Some(incrementer), body
+                                Some(Box::new(constructor)), Some(condition), None, body
                             )
                         );
                     }
@@ -299,7 +332,7 @@ impl AstFactory {
                     let body = Box::new(self.parse_statement()?);
                     return Ok(
                         Statement::For(
-                            constructor, Some(condition), None, body
+                            Some(Box::new(constructor)), None, None, body
                         )
                     );
                 }
@@ -308,7 +341,7 @@ impl AstFactory {
                 let body = Box::new(self.parse_statement()?);
 
                 Ok(Statement::For(
-                    constructor, None, None, body)
+                    None, None, None, body)
                 )
             }
             _ => {

@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::position::Position;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 #[allow(unused)]
 pub enum TokenType {
     LeftParen,
