@@ -284,6 +284,7 @@ impl AstFactory {
                 //println!("constructor");
                 if let Ok(condition) = self.parse_assignment() {
                     //println!("condition");
+                    self.current += 1;
                     if let Ok(incrementer) = self.parse_assignment() { 
                         //println!("incrementer");
                         self.current += 1;
