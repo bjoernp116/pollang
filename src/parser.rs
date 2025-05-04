@@ -281,11 +281,11 @@ impl AstFactory {
                 }
                 self.current += 1;
                 let constructor = Box::new(self.parse_statement()?);
-                println!("constructor");
+                //println!("constructor");
                 if let Ok(condition) = self.parse_assignment() {
-                    println!("condition");
+                    //println!("condition");
                     if let Ok(incrementer) = self.parse_assignment() { 
-                        println!("incrementer");
+                        //println!("incrementer");
                         self.current += 1;
                         let body = Box::new(self.parse_statement()?);
                         return Ok(
